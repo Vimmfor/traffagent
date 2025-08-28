@@ -142,10 +142,10 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
         <a href="#home" className="text-sm font-semibold tracking-tight">TraffAgent</a>
         <div className="hidden md:flex items-center gap-6 text-sm text-zinc-400">
           <a href="#services" className="hover:text-zinc-100">Услуги</a>
-          <a href="#inside" className="hover:text-зinc-100">Внутри</a>
-          <a href="#cases" className="hover:text-зinc-100">Кейсы</a>
-          <a href="#pricing" className="hover:text-зinc-100">Тарифы</a>
-          <a href="#faq" className="hover:text-зinc-100">FAQ</a>
+          <a href="#inside" className="hover:text-zinc-100">Внутри</a>
+          <a href="#cases" className="hover:text-zinc-100">Кейсы</a>
+          <a href="#pricing" className="hover:text-zinc-100">Тарифы</a>
+          <a href="#faq" className="hover:text-zinc-100">FAQ</a>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => { fbqTrack('Lead', { place: 'header_start' }); onQuiz(); }} className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-zinc-900">
@@ -259,7 +259,7 @@ function Inside() {
     ["Рост", "Оптимизация по LTV/ROAS, автоматизация, масштаб."],
   ];
   return (
-    <Section id="inside" className="py-10 sm:py-12" bg="bg-white text-зinc-900">
+    <Section id="inside" className="py-10 sm:py-12" bg="bg-white text-black">
       <Kicker>Как это устроено</Kicker>
       <H2>Внутри TraffAgent</H2>
       <ol className="mt-6 space-y-3">
@@ -337,7 +337,7 @@ function FAQ() {
     ["Как считаете атрибуцию?", "Серверный трекинг, событийная модель, сводка в BI."],
   ];
   return (
-    <Section id="faq" className="py-10 sm:py-12" bg="bg-зinc-950 text-зinc-100">
+    <Section id="faq" className="py-10 sm:py-12" bg="bg-зinc-950 text-zinc-100">
       <Kicker>Вопросы</Kicker>
       <H2>FAQ</H2>
       <ul className="mt-6 divide-y divide-white/10 rounded-2xl border border-white/10">
