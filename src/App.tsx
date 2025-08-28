@@ -173,28 +173,99 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
 }
 
 // Hero
-function Hero({ onQuiz }: { onQuiz: () => void }) {
-  const sources = ["META (Facebook - Instagram - Threads)", "YouTube", "TikTok", "Google", "Telegram", "Twitter"];
+
+// KP-style Mobile Hero (tabloid look)
+function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
   return (
-    <Section id="home" className="pt-14 pb-14 sm:pt-16 sm:pb-16" bg="bg-white text-zinc-900">
-      <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center">
-        <motion.div variants={item} className="lg:col-span-7">
-          <Kicker>Трафик за гранью разума</Kicker>
-          <h1 className="mt-2 text-3xl sm:text-4xl md:text-6xl font-extrabold leading-snug">TraffAgent - трафик за гранью разума</h1>
-          <p className="mt-4 max-w-2xl text-zinc-600 text-base sm:text-lg">Выходим за пределы стандартного таргета: медиабаинг, креативы, аналитика и автоматизация, которые превращают клики в прибыль.</p>
-          <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
-            <button onClick={() => { fbqTrack('Lead', { place: 'hero_start' }); onQuiz(); }} className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-base sm:text-sm font-semibold text-white w-full sm:w-auto">Запустить траф</button>
-            <a href="https://t.me/traffagent" target="_blank" rel="noreferrer noopener" onClick={() => fbqTrack('Lead', { place: 'hero_tg' })} className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-300 px-5 py-3 text-base sm:text-sm font-semibold w-full sm:w-auto">Похуй, делаем!</a>
+    <Section id="home" className="pt-3 pb-6 sm:pb-8 sm:pt-10" bg="bg-white text-black">
+      {/* Masthead */}
+      <div className="mx-auto max-w-6xl px-3">
+        <div className="rounded-md overflow-hidden border border-zinc-200 shadow-sm">
+          <div className="bg-red-600 text-white px-3 py-2 flex items-center justify-between">
+            <div className="text-[11px] font-extrabold uppercase tracking-wider">Срочно</div>
+            <div className="text-[11px] font-semibold">Комсомольский стиль</div>
           </div>
-        </motion.div>
-        <div className="lg:col-span-12">
-          <ContinuousMarquee items={sources} speed={40} gap={32} />
+
+          <div className="px-3 py-3 space-y-2">
+            <div className="inline-flex items-center gap-2">
+              <span className="bg-yellow-400 text-black text-[10px] font-extrabold uppercase px-2 py-0.5 rounded">Эксклюзив</span>
+              <span className="text-[10px] text-zinc-600">TraffAgent • медиа баинг</span>
+            </div>
+
+            <h1 className="text-[26px] leading-7 font-extrabold uppercase tracking-tight">
+              Трафик за гранью разума
+            </h1>
+
+            <p className="text-[13px] text-zinc-700">
+              Выходим за пределы стандартного таргета: медиабаинг, креативы, аналитика и автоматизация,
+              которые превращают клики в прибыль.
+            </p>
+
+            <div className="mt-3 grid grid-cols-1 gap-2">
+              <button
+                onClick={() => { fbqTrack('Lead', { place: 'kp_mobile_start' }); onQuiz(); }}
+                className="inline-flex items-center justify-center rounded-md bg-black text-white px-4 py-3 text-[13px] font-extrabold uppercase tracking-wide"
+              >
+                Запустить траф
+              </button>
+              <a
+                href="https://t.me/traffagent"
+                target="_blank"
+                rel="noreferrer noopener"
+                onClick={() => fbqTrack('Lead', { place: 'kp_mobile_tg' })}
+                className="inline-flex items-center justify-center rounded-md border border-zinc-900 px-4 py-3 text-[13px] font-extrabold uppercase tracking-wide"
+              >
+                Похуй, делаем!
+              </a>
+            </div>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </Section>
   );
 }
 
+function Hero({ onQuiz }: { onQuiz: () => void }) {
+  const sources = [
+    "META (Facebook - Instagram - Threads)",
+    "YouTube",
+    "TikTok",
+    "Google",
+    "Telegram",
+    "Twitter",
+  ];
+  return (
+    <>
+      {/* Mobile (tabloid KP style) */}
+      <div className="sm:hidden">
+        <KPMobileHero onQuiz={onQuiz} />
+        <div className="px-4">
+          <ContinuousMarquee items={sources} speed={40} gap={32} />
+        </div>
+      </div>
+
+      {/* Desktop / Tablet = original hero */}
+      <div className="hidden sm:block">
+        <Section id="home" className="pt-14 pb-14 sm:pt-16 sm:pb-16" bg="bg-white text-zinc-900">
+          <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center">
+            <motion.div variants={item} className="lg:col-span-7">
+              <Kicker>Трафик за гранью разума</Kicker>
+              <h1 className="mt-2 text-3xl sm:text-4xl md:text-6xl font-extrabold leading-snug">TraffAgent - трафик за гранью разума</h1>
+              <p className="mt-4 max-w-2xl text-zinc-600 text-base sm:text-lg">Выходим за пределы стандартного таргета: медиабаинг, креативы, аналитика и автоматизация, которые превращают клики в прибыль.</p>
+              <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
+                <button onClick={() => { fbqTrack('Lead', { place: 'hero_start' }); onQuiz(); }} className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-base sm:text-sm font-semibold text-white w-full sm:w-auto">Запустить траф</button>
+                <a href="https://t.me/traffagent" target="_blank" rel="noreferrer noopener" onClick={() => fbqTrack('Lead', { place: 'hero_tg' })} className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-300 px-5 py-3 text-base sm:text-sm font-semibold w-full sm:w-auto">Похуй, делаем!</a>
+              </div>
+            </motion.div>
+            <div className="lg:col-span-12">
+              <ContinuousMarquee items={sources} speed={40} gap={32} />
+            </div>
+          </motion.div>
+        </Section>
+      </div>
+    </>
+  );
+}
 // Metrics
 function Metrics() {
   const stats: [string, string][] = [
