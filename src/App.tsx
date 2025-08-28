@@ -185,8 +185,6 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
           <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
             <button onClick={() => { fbqTrack('Lead', { place: 'hero_start' }); onQuiz(); }} className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-base sm:text-sm font-semibold text-white w-full sm:w-auto">Запустить траф</button>
             <a href="https://t.me/traffagent" target="_blank" rel="noreferrer noopener" onClick={() => fbqTrack('Lead', { place: 'hero_tg' })} className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-300 px-5 py-3 text-base sm:text-sm font-semibold w-full sm:w-auto">Похуй, делаем!</a>
-            <a href={GITHUB_URL} target="_blank" rel="noreferrer noopener" className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-300 px-5 py-3 text-base sm:text-sm font-semibold w-full sm:w-auto">GitHub</a>
-            <a href={VERCEL_URL} target="_blank" rel="noreferrer noopener" className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-300 px-5 py-3 text-base sm:text-sm font-semibold w-full sm:w-auto">Vercel</a>
           </div>
         </motion.div>
         <div className="lg:col-span-12">
@@ -488,9 +486,9 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
               <p className="text-sm text-zinc-600">Мы сохранили ваши ответы ниже. Можно скопировать и отправить в диалог.</p>
               <textarea ref={textRef} value={summaryText} readOnly disabled className="w-full rounded-xl border border-zinc-300 px-3 py-3 text-sm text-zinc-700" />
               <div className="flex flex-col sm:flex-row gap-2">
-                <a href={tgLink} target="_blank" rel="noreferrer noopener" onClick={() => proceedToTG('quiz_confirm_submit')} className="inline-flex items-center justify-center rounded-xl bg-zinc-900 text-white px-4 py-2 text-sm font-semibold w-full sm:w-auto">Оставить заявку (Telegram)</a>
+                <a href={tgLink} target="_blank" rel="noreferrer noopener" onClick={() => proceedToTG('quiz_confirm_submit')} className="inline-flex items-center justify-center rounded-xl bg-zinc-900 text-white px-4 py-2 text-sm font-semibold w-full sm:w-auto">Оставить заявку</a>
                 <button onClick={selectSummary} className="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-4 py-2 text-sm w-full sm:w-auto">{selected ? "Текст выделен — жмите Ctrl/Cmd+C" : "Выделить ответы"}</button>
-                <a href={tgLink} target="_blank" rel="noreferrer noopener" onClick={() => proceedToTG('quiz_confirm_close')} className="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-4 py-2 text-sm w-full sm:w-auto">Закрыть (Telegram)</a>
+                <a href={tgLink} target="_blank" rel="noreferrer noopener" onClick={() => proceedToTG('quiz_confirm_close')} className="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-4 py-2 text-sm w-full sm:w-auto">Закрыть</a>
               </div>
             </div>
           )}
