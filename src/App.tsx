@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, Menu, Sparkles, X } from "lucide-react";
 
-// ====== Внешние ссылки (можно поменять при желании) ======
+// ====== (опц.) внешние ссылки — сейчас нигде не показываем ======
 const GITHUB_URL = "https://github.com/vimmfor/traffagent";
 const VERCEL_URL = "https://vercel.com/dashboard?project=traffagent";
 
@@ -157,7 +157,7 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
             <a href="#cases" className="py-3">Кейсы</a>
             <a href="#pricing" className="py-3">Тарифы</a>
             <a href="#faq" className="py-3">FAQ</a>
-            <button onClick={() => { toggle(); fbqTrack('Lead', { place: 'menu_write' }); onQuiz(); }} className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg.white px-4 py-3 font-semibold text-zinc-900">
+            <button onClick={() => { toggle(); fbqTrack('Lead', { place: 'menu_write' }); onQuiz(); }} className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-3 font-semibold text-zinc-900">
               Написать
             </button>
           </div>
@@ -198,14 +198,14 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
                 onClick={() => { fbqTrack('Lead', { place: 'kp_mobile_start' }); onQuiz(); }}
                 className="inline-flex items-center justify-center rounded-md bg-black text-white px-4 py-3 text-[13px] font-extrabold uppercase tracking-wide"
               >
-                Запустить траф
+                Хочу продажи
               </button>
               <a
                 href="https://t.me/traffagent"
                 target="_blank"
                 rel="noreferrer noopener"
                 onClick={() => fbqTrack('Lead', { place: 'kp_mobile_tg' })}
-                className="inline-flex items-center justify-center rounded-md border border-zinc-900 px-4 py-3 text-[13px] font-extrabold uppercase tracking-wide"
+                className="inline-flex items-center justify-center rounded-md border border-zinc-900 px-4 py-3 text-[13px] font-extrabод uppercase tracking-wide"
               >
                 Похуй, делаем!
               </a>
@@ -217,7 +217,7 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-// ====== Hero (с переключением мобильный/десктоп) ======
+// ====== Hero (мобайл/десктоп) ======
 function Hero({ onQuiz }: { onQuiz: () => void }) {
   const sources = [
     "META (Facebook - Instagram - Threads)",
@@ -242,7 +242,7 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
         <Section id="home" className="pt-14 pb-14 sm:pt-16 sm:pb-16" bg="bg-white text-zinc-900">
           <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center">
             <motion.div variants={item} className="lg:col-span-7">
-              {/* вставили красную плашку */}
+              {/* красная плашка */}
               <div className="bg-red-600 text-white px-3 py-2 flex items-center justify-between rounded-md mb-6">
                 <div className="text-[11px] font-extrabold uppercase tracking-wider">Срочно</div>
                 <div className="text-[11px] font-semibold">Объявление</div>
@@ -261,7 +261,7 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
                   onClick={() => { fbqTrack('Lead', { place: 'hero_start' }); onQuiz(); }}
                   className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-base sm:text-sm font-semibold text-white w-full sm:w-auto"
                 >
-                  Запустить траф
+                  Хочу продажи
                 </button>
                 <a
                   href="https://t.me/traffagent"
@@ -326,7 +326,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
               <p className="mt-1 text-zinc-400">{g.desc}</p>
               <ul className="mt-3 space-y-1 text-[12px] sm:text-xs text-zinc-500">
                 {g.bullets.map((b, idx) => (
-                  <li key={idx} className="flex items.center gap-2"><Check className="h-4 w-4" /> {b}</li>
+                  <li key={idx} className="flex items-center gap-2"><Check className="h-4 w-4" /> {b}</li>
                 ))}
               </ul>
             </div>
@@ -334,7 +334,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
               onClick={() => { fbqTrack('Lead', { place: 'services_card', title: g.title }); onQuiz(); }}
               className="mt-4 inline-flex items-center justify-center rounded-xl bg-white text-black px-4 py-2 text-sm font-medium w-full"
             >
-              Запустить траф
+              Хочу продажи
             </button>
           </li>
         ))}
@@ -451,21 +451,20 @@ function FAQ() {
   );
 }
 
-// ====== Footer ======
-// ====== Footer ======
+// ====== Footer (ссылки убраны) ======
 function Footer() {
   return (
     <footer className="border-t border-white/5 py-8 bg-zinc-950 text-zinc-400">
       <Section id="footer">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify_between gap-3">
           <div className="text-sm font-semibold text-zinc-100">TraffAgent</div>
-          {/* ссылки убраны */}
           <p className="text-xs">(c) {new Date().getFullYear()} TraffAgent. Все права защищены.</p>
         </div>
       </Section>
     </footer>
   );
 }
+
 // ====== Quiz с финальным подтверждением ======
 function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
   async function sendLead(payload: any) {
@@ -557,7 +556,7 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div className="absolute inset-0 bg-black/60" onClick={() => { proceedToTG('quiz_backdrop_close'); onClose(); }} />
-      <div className="relative z-[101] w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl bg-white text-zinc-900 shadow-2xl">
+      <div className="relative z-[101] w-full sm:max-w-lg rounded-т-2xl sm:rounded-2xl bg-white text-zinc-900 shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200">
           <div className="text-sm font-semibold">Мини-квиз</div>
           <button onClick={() => { proceedToTG('quiz_x_close'); onClose(); }} className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-zinc-200" aria-label="Закрыть">x</button>
@@ -598,7 +597,7 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
                   target="_blank"
                   rel="noreferrer noopener"
                   onClick={() => proceedToTG('quiz_confirm_close')}
-                  className="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-4 py-2 text-sm w-full sm:w-auto"
+                  className="inline-flex items-center justify-center rounded-xl border border-зinc-300 px-4 py-2 text-sm w-full sm:w-auto"
                 >
                   Закрыть
                 </a>
