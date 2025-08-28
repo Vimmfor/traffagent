@@ -183,7 +183,7 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
         <div className="rounded-md overflow-hidden border border-zinc-200 shadow-sm">
           <div className="bg-red-600 text-white px-3 py-2 flex items-center justify-between">
             <div className="text-[11px] font-extrabold uppercase tracking-wider">Срочно</div>
-            <div className="text-[11px] font-semibold">Комсомольский стиль</div>
+            <div className="text-[11px] font-semibold">Объявление</div>
           </div>
 
           <div className="px-3 py-3 space-y-2">
