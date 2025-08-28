@@ -2,26 +2,17 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, Menu, Sparkles, X } from "lucide-react";
 
-// ====== (опц.) внешние ссылки — сейчас нигде не показываем ======
-const GITHUB_URL = "https://github.com/vimmfor/traffagent";
-const VERCEL_URL = "https://vercel.com/dashboard?project=traffagent";
-
-// ====== Отправка лида (опционально — webhook или Telegram Bot API) ======
-const LEAD_WEBHOOK = "";
-const TG_BOT_TOKEN = "";
-const TG_CHAT_ID = "";
-
-// ====== Pixel helper ======
+// ===== Pixel helper =====
 declare global { interface Window { fbq?: (...args: any[]) => void } }
 const fbqTrack = (event: string, params?: Record<string, any>) => {
   try { window.fbq && window.fbq("track", event, params || {}); } catch {}
 };
 
-// ====== Анимации ======
+// ===== Animations =====
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } };
 
-// ====== Примитивы UI ======
+// ===== UI primitives =====
 type SectionProps = { id?: string; children: React.ReactNode; className?: string; bg?: string };
 const Section: React.FC<SectionProps> = ({ id, children, className = "", bg = "" }) => (
   <section id={id} className={`${bg} mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 ${className}`}>{children}</section>
@@ -37,7 +28,7 @@ const H2: React.FC<{ children: React.ReactNode; className?: string }> = ({ child
   <h2 className={`mt-2 text-[22px] sm:text-2xl md:text-4xl font-semibold leading-tight tracking-tight ${className}`}>{children}</h2>
 );
 
-// ====== Бегущая строка (источники трафика) ======
+// ===== Marquee =====
 type MarqueeProps = { items: string[]; speed?: number; gap?: number };
 function ContinuousMarquee({ items, speed = 40, gap = 32 }: MarqueeProps) {
   const stripRef = useRef<HTMLDivElement | null>(null);
@@ -46,36 +37,22 @@ function ContinuousMarquee({ items, speed = 40, gap = 32 }: MarqueeProps) {
 
   useEffect(() => {
     const recalc = () => {
-      if (stripRef.current) {
-        const rect = stripRef.current.getBoundingClientRect();
-        setWidth(rect.width);
-      }
+      if (stripRef.current) setWidth(stripRef.current.getBoundingClientRect().width);
     };
     recalc();
     const RO: any = (window as any).ResizeObserver;
     let ro: any;
-    if (RO && stripRef.current) {
-      ro = new RO(recalc);
-      ro.observe(stripRef.current);
-    }
+    if (RO && stripRef.current) { ro = new RO(recalc); ro.observe(stripRef.current); }
     window.addEventListener("resize", recalc);
-    return () => {
-      if (ro && stripRef.current) ro.disconnect();
-      window.removeEventListener("resize", recalc);
-    };
+    return () => { if (ro && stripRef.current) ro.disconnect(); window.removeEventListener("resize", recalc); };
   }, []);
 
   useEffect(() => {
-    let raf = 0;
-    let prev = performance.now();
+    let raf = 0, prev = performance.now();
     const tick = (now: number) => {
       const dt = now - prev;
       prev = now;
-      setOffset((o) => {
-        if (width <= 0) return 0;
-        const next = (o + (speed * dt) / 1000) % width;
-        return next;
-      });
+      setOffset((o) => (width <= 0 ? 0 : (o + (speed * dt) / 1000) % width));
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -105,7 +82,7 @@ function ContinuousMarquee({ items, speed = 40, gap = 32 }: MarqueeProps) {
   );
 }
 
-// ====== Header ======
+// ===== Header =====
 function Header({ onQuiz }: { onQuiz: () => void }) {
   const [open, setOpen] = useState(false);
   const toggle = () => setOpen((v) => !v);
@@ -117,15 +94,10 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
       const id = a.getAttribute('href');
       if (id && id.startsWith('#') && id.length > 1) {
         const el = document.querySelector(id);
-        if (el) {
-          e.preventDefault();
-          (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
-          setOpen(false);
-        }
+        if (el) { e.preventDefault(); (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' }); setOpen(false); }
       }
     };
-    const nav = document.getElementById('main-nav');
-    if (nav) nav.addEventListener('click', handler);
+    const nav = document.getElementById('main-nav'); if (nav) nav.addEventListener('click', handler);
     return () => nav && nav.removeEventListener('click', handler);
   }, []);
 
@@ -167,36 +139,37 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-// ====== KP-style Mobile Hero ======
+// ===== KP-style Mobile Hero — 80vh + edge-to-edge =====
 function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
   return (
-    <Section id="home" className="pt-3 pb-6 sm:pb-8 sm:pt-10" bg="bg-white text-black">
-      <div className="mx-auto max-w-6xl px-3">
-        <div className="rounded-md overflow-hidden border border-zinc-200 shadow-sm">
+    <Section id="home" className="min-h-[82vh] flex flex-col justify-center pt-8 pb-12 sm:pt-14 sm:pb-16" bg="bg-white text-black">
+      {/* edge-to-edge за счёт отрицательных внешних отступов на мобилке */}
+      <div className="-mx-4 sm:mx-0">
+        <div className="overflow-hidden border border-zinc-200 sm:rounded-md">
           <div className="bg-red-600 text-white px-3 py-2 flex items-center justify-between">
             <div className="text-[11px] font-extrabold uppercase tracking-wider">Срочно</div>
             <div className="text-[11px] font-semibold">Объявление</div>
           </div>
 
-          <div className="px-3 py-3 space-y-2">
+          <div className="px-4 sm:px-5 py-6 space-y-6">
             <div className="inline-flex items-center gap-2">
               <span className="bg-yellow-400 text-black text-[10px] font-extrabold uppercase px-2 py-0.5 rounded">Эксклюзив</span>
               <span className="text-[10px] text-zinc-600">TraffAgent • медиа баинг</span>
             </div>
 
-            <h1 className="text-[26px] leading-7 font-extrabold uppercase tracking-tight">
+            <h1 className="text-[36px] sm:text-[40px] leading-[1.1] font-extrabold uppercase tracking-tight">
               Трафик без границ
             </h1>
 
-            <p className="text-[13px] text-zinc-700">
+            <p className="text-[16px] sm:text-[17px] leading-snug text-zinc-700 max-w-[46ch]">
               Выходим за пределы стандартного таргета: медиабаинг, креативы, аналитика и автоматизация,
               которые превращают клики в прибыль.
             </p>
 
-            <div className="mt-3 grid grid-cols-1 gap-2">
+            <div className="mt-2 grid grid-cols-1 gap-2">
               <button
                 onClick={() => { fbqTrack('Lead', { place: 'kp_mobile_start' }); onQuiz(); }}
-                className="inline-flex items-center justify-center rounded-md bg-black text-white px-4 py-3 text-[13px] font-extrabold uppercase tracking-wide"
+                className="inline-flex items-center justify-center rounded-none sm:rounded-md bg-black text-white px-5 py-4.5 text-[16px] font-extrabold uppercase tracking-wide w-full"
               >
                 Хочу продажи
               </button>
@@ -205,7 +178,7 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
                 target="_blank"
                 rel="noreferrer noopener"
                 onClick={() => fbqTrack('Lead', { place: 'kp_mobile_tg' })}
-                className="inline-flex items-center justify-center rounded-md border border-zinc-900 px-4 py-3 text-[13px] font-extrabод uppercase tracking-wide"
+                className="inline-flex items-center justify-center rounded-none sm:rounded-md border border-zinc-900 px-5 py-4.5 text-[16px] font-extrabold uppercase tracking-wide w-full"
               >
                 Похуй, делаем!
               </a>
@@ -217,7 +190,7 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-// ====== Hero (мобайл/десктоп) ======
+// ===== Hero (mobile + desktop) =====
 function Hero({ onQuiz }: { onQuiz: () => void }) {
   const sources = [
     "META (Facebook - Instagram - Threads)",
@@ -237,22 +210,20 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
         </div>
       </div>
 
-      {/* Desktop / Tablet — классический с красной плашкой */}
+      {/* Desktop / Tablet — классический */}
       <div className="hidden sm:block">
         <Section id="home" className="pt-14 pb-14 sm:pt-16 sm:pb-16" bg="bg-white text-zinc-900">
           <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center">
             <motion.div variants={item} className="lg:col-span-7">
-              {/* красная плашка */}
               <div className="bg-red-600 text-white px-3 py-2 flex items-center justify-between rounded-md mb-6">
                 <div className="text-[11px] font-extrabold uppercase tracking-wider">Срочно</div>
                 <div className="text-[11px] font-semibold">Объявление</div>
               </div>
-
               <Kicker>Трафик без границ</Kicker>
-              <h1 className="mt-2 text-3xl sm:text-4xl md:text-6xl font-extrabold leading-snug">
+              <h1 className="mt-2 text-3xl sm:text-5xl md:text-6xl font-extrabold leading-tight">
                 TraffAgent - трафик без границ
               </h1>
-              <p className="mt-4 max-w-2xl text-zinc-600 text-base sm:text-lg">
+              <p className="mt-5 max-w-2xl text-zinc-600 text-base sm:text-lg">
                 Выходим за пределы стандартного таргета: медиабаинг, креативы, аналитика и автоматизация,
                 которые превращают клики в прибыль.
               </p>
@@ -284,7 +255,7 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-// ====== Metrics ======
+// ===== Metrics =====
 function Metrics() {
   const stats: [string, string][] = [
     ["3.7x", "средний ROAS"],
@@ -306,7 +277,7 @@ function Metrics() {
   );
 }
 
-// ====== Services ======
+// ===== Services =====
 function Services({ onQuiz }: { onQuiz: () => void }) {
   const groups = [
     { title: "Медиабаинг + Комплаенс", desc: "Meta, Google, TikTok, альтернативы. Anti-ban, прогрев, резервы.", bullets: ["Гипотезы и тесты", "Масштабирование", "Кейсы по вайт/грей"] },
@@ -325,9 +296,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
               <div className="font-medium text-base sm:text-[15px]">{g.title}</div>
               <p className="mt-1 text-zinc-400">{g.desc}</p>
               <ul className="mt-3 space-y-1 text-[12px] sm:text-xs text-zinc-500">
-                {g.bullets.map((b, idx) => (
-                  <li key={idx} className="flex items-center gap-2"><Check className="h-4 w-4" /> {b}</li>
-                ))}
+                {g.bullets.map((b, idx) => (<li key={idx} className="flex items-center gap-2"><Check className="h-4 w-4" /> {b}</li>))}
               </ul>
             </div>
             <button
@@ -343,7 +312,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-// ====== Inside ======
+// ===== Inside =====
 function Inside() {
   const steps: [string, string][] = [
     ["Discovery", "Погружаемся в продукт, аудиторию и цели. KPI и рамки."],
@@ -368,7 +337,7 @@ function Inside() {
   );
 }
 
-// ====== Cases ======
+// ===== Cases =====
 function Cases() {
   const list: [string, string, string][] = [
     ["FinTech SaaS", "+212% MRR", "Google + LinkedIn + контент"],
@@ -394,7 +363,7 @@ function Cases() {
   );
 }
 
-// ====== Pricing ======
+// ===== Pricing =====
 function Pricing({ onQuiz }: { onQuiz: () => void }) {
   const plans = [
     { name: "Старт", price: "от $1k", desc: "Для тестов и первых продаж", features: ["Стратегия", "3-5 подходов", "1-2 канала", "Еженед. отчет"], highlight: false },
@@ -428,7 +397,7 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-// ====== FAQ ======
+// ===== FAQ =====
 function FAQ() {
   const qa: [string, string][] = [
     ["С какими вертикалями работаете?", "E-com, edtech, подписки, mobile, SaaS, финтех."],
@@ -451,12 +420,12 @@ function FAQ() {
   );
 }
 
-// ====== Footer (ссылки убраны) ======
+// ===== Footer =====
 function Footer() {
   return (
     <footer className="border-t border-white/5 py-8 bg-zinc-950 text-zinc-400">
       <Section id="footer">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify_between gap-3">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
           <div className="text-sm font-semibold text-zinc-100">TraffAgent</div>
           <p className="text-xs">(c) {new Date().getFullYear()} TraffAgent. Все права защищены.</p>
         </div>
@@ -465,41 +434,8 @@ function Footer() {
   );
 }
 
-// ====== Quiz с финальным подтверждением ======
+// ===== Quiz =====
 function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
-  async function sendLead(payload: any) {
-    try {
-      const text = [
-        "Новая заявка TraffAgent",
-        `Бюджет: ${payload.budget || '-'}`,
-        `Ниша: ${payload.niche || '-'}`,
-        `GEO: ${payload.geo || '-'}`,
-        `UA: ${navigator.userAgent}`,
-        `Time: ${new Date().toISOString()}`,
-      ].join("\n");
-
-      if (LEAD_WEBHOOK) {
-        await fetch(LEAD_WEBHOOK, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, answers: payload }),
-          keepalive: true,
-        });
-        return;
-      }
-      if (TG_BOT_TOKEN && TG_CHAT_ID) {
-        await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: TG_CHAT_ID, text }),
-          keepalive: true,
-        });
-      }
-    } catch (err) {
-      console.warn("Lead delivery failed", err);
-    }
-  }
-
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({ budget: "", niche: "", geo: "" });
   const [selected, setSelected] = useState(false);
@@ -534,8 +470,8 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
       if (step < lastIndex) {
         setStep(step + 1);
       } else {
-        await sendLead(nextAnswers);
-        setStep(step + 1); // финальная страница-подтверждение
+        // здесь можно добавить отправку на webhook/бота
+        setStep(step + 1);
       }
     }
   };
@@ -556,7 +492,7 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div className="absolute inset-0 bg-black/60" onClick={() => { proceedToTG('quiz_backdrop_close'); onClose(); }} />
-      <div className="relative z-[101] w-full sm:max-w-lg rounded-т-2xl sm:rounded-2xl bg-white text-zinc-900 shadow-2xl">
+      <div className="relative z-[101] w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl bg-white text-zinc-900 shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200">
           <div className="text-sm font-semibold">Мини-квиз</div>
           <button onClick={() => { proceedToTG('quiz_x_close'); onClose(); }} className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-zinc-200" aria-label="Закрыть">x</button>
@@ -597,7 +533,7 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
                   target="_blank"
                   rel="noreferrer noopener"
                   onClick={() => proceedToTG('quiz_confirm_close')}
-                  className="inline-flex items-center justify-center rounded-xl border border-зinc-300 px-4 py-2 text-sm w-full sm:w-auto"
+                  className="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-4 py-2 text-sm w-full sm:w-auto"
                 >
                   Закрыть
                 </a>
@@ -619,7 +555,7 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
   );
 }
 
-// ====== Страница ======
+// ===== Page =====
 export function TraffAgentLanding() {
   const [quizOpen, setQuizOpen] = useState(false);
   useEffect(() => { fbqTrack('ViewContent', { content_name: 'TraffAgent Landing' }); }, []);
