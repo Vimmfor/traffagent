@@ -185,7 +185,7 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
             </div>
 
             <h1 className="text-[26px] leading-7 font-extrabold uppercase tracking-tight">
-              Трафик за гранью разума
+              Трафик без границ
             </h1>
 
             <p className="text-[13px] text-zinc-700">
@@ -248,9 +248,9 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
                 <div className="text-[11px] font-semibold">Объявление</div>
               </div>
 
-              <Kicker>Трафик за гранью разума</Kicker>
+              <Kicker>Трафик без границ</Kicker>
               <h1 className="mt-2 text-3xl sm:text-4xl md:text-6xl font-extrabold leading-snug">
-                TraffAgent - трафик за гранью разума
+                TraffAgent - трафик без границ
               </h1>
               <p className="mt-4 max-w-2xl text-zinc-600 text-base sm:text-lg">
                 Выходим за пределы стандартного таргета: медиабаинг, креативы, аналитика и автоматизация,
