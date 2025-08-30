@@ -132,7 +132,6 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
   return (
     <Section
       id="home"
-      // ВАЖНО: на мобилке (по умолчанию) — без лишних отступов; на sm (>=640px) — стандартные
       className="min-h-[82vh] flex flex-col justify-start pt-0 pb-0 sm:pt-12 sm:pb-12"
       bg="bg-white text-black"
     >
@@ -169,7 +168,7 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
               </button>
               <button
                 onClick={() => { fbqTrack("Lead", { place: "kp_mobile_tg" }); onQuiz(); }}
-                className="inline-flex items-center justify-center rounded-none sm:rounded-md border border-zinc-900 px-5 py-4 text-[16px] font-extrabold uppercase tracking-wide w-full"
+                className="inline-flex items-center justify-center rounded-none sm:rounded-md border border-zinc-900 px-5 py-4 text-[16px] font-extrabод uppercase tracking-wide w-full"
               >
                 Похуй, делаем!
               </button>
@@ -186,7 +185,7 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-/* ---------- Desktop Hero (как было) ---------- */
+/* ---------- Desktop Hero (как было до этого улучшенного варианта) ---------- */
 function Hero({ onQuiz }: { onQuiz: () => void }) {
   const sources = ["META (Facebook • Instagram • Threads)", "YouTube", "TikTok", "Google", "Telegram", "Twitter / X", "LinkedIn", "Reddit"];
   return (
@@ -243,8 +242,7 @@ function Metrics() {
   return (
     <Section
       id="metrics"
-      // мобилка ближе (pt-6), на sm возвращаем стандартный ритм
-      className="pt-6 pb-10 sm:pt-12 sm:pb-12"
+      className="pt-3 pb-10 sm:pt-12 sm:pb-12"
       bg="bg-white text-zinc-900"
     >
       <ul className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -268,7 +266,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
     { title:"Аналитика + Отчетность", desc:"Серверный трекинг, событийная модель, сводка в BI.", bullets:["Сквозная аналитика","Дашборды","KPI weekly"] },
   ];
   return (
-    <Section id="services" className="pt-6 pb-10 sm:pt-12 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
+    <Section id="services" className="pt-3 pb-10 sm:pt-12 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
       <Kicker>Что мы делаем</Kicker>
       <H2>Услуги</H2>
       <ul className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
@@ -303,7 +301,7 @@ function Inside() {
     ["Рост","Оптимизация по LTV/ROAS, автоматизация, масштаб."],
   ];
   return (
-    <Section id="inside" className="pt-6 pb-10 sm:pt-12 sm:pb-12" bg="bg-white text-black">
+    <Section id="inside" className="pt-3 pb-10 sm:pt-12 sm:pb-12" bg="bg-white text-black">
       <Kicker>Как это устроено</Kicker>
       <H2>Внутри TraffAgent</H2>
       <ol className="mt-6 space-y-3">
@@ -326,7 +324,7 @@ function Cases() {
     ["EdTech mobile","CPI -37%","Meta + пачки креативов"],
   ];
   return (
-    <Section id="cases" className="pt-6 pb-10 sm:pt-12 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
+    <Section id="cases" className="pt-3 pb-10 sm:pt-12 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
       <Kicker>Партнеры</Kicker>
       <H2>Кейсы</H2>
       <ul className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -352,7 +350,7 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
     { name:"Скейл", price:"кастом", desc:"Под высокие бюджеты и KPI", features:["Кастомная команда","R&D и анти-бан","Серверный трекинг","SLA по KPI"], highlight:false },
   ];
   return (
-    <Section id="pricing" className="pt-6 pb-10 sm:pt-12 sm:pb-12" bg="bg-white text-zinc-900">
+    <Section id="pricing" className="pt-3 pb-10 sm:pt-12 sm:pb-12" bg="bg-white text-zinc-900">
       <Kicker>Прозрачные условия</Kicker>
       <H2 className="text-black">Тарифы</H2>
       <ul className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -383,7 +381,7 @@ function FAQ() {
     ["Как считаете атрибуцию?","Серверный трекинг, событийная модель, сводка в BI."],
   ];
   return (
-    <Section id="faq" className="pt-6 pb-10 sm:pt-12 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
+    <Section id="faq" className="pt-3 pb-10 sm:pt-12 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
       <Kicker>Вопросы</Kicker>
       <H2>FAQ</H2>
       <ul className="mt-6 divide-y divide-white/10 rounded-2xl border border-white/10">
