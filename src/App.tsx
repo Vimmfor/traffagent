@@ -35,7 +35,7 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
         <div className="hidden md:flex items-center gap-6 text-sm text-zinc-400">
           <a href="#services" className="hover:text-zinc-100">Услуги</a>
           <a href="#inside" className="hover:text-zinc-100">Внутри</a>
-          <a href="#cases" className="hover:text-zinc-100">Кейсы</a>
+          <a href="#cases" className="hover:text-зinc-100">Кейсы</a>
           <a href="#pricing" className="hover:text-zinc-100">Тарифы</a>
           <a href="#faq" className="hover:text-zinc-100">FAQ</a>
         </div>
@@ -158,7 +158,6 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
               Выходим за пределы стандартного таргета: медиабаинг, креативы, аналитика и автоматизация, которые превращают клики в прибыль.
             </p>
 
-            {/* CTA */}
             <div className="grid grid-cols-1 gap-2">
               <button
                 onClick={() => { fbqTrack("Lead", { place: "kp_mobile_start" }); onQuiz(); }}
@@ -185,7 +184,7 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-/* ---------- Desktop Hero (улучшенный вариант) ---------- */
+/* ---------- Desktop Hero (улучшенный) ---------- */
 function Hero({ onQuiz }: { onQuiz: () => void }) {
   const sources = ["META (Facebook • Instagram • Threads)", "YouTube", "TikTok", "Google", "Telegram", "Twitter / X", "LinkedIn", "Reddit"];
   return (
@@ -233,18 +232,16 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-/* ---------- Metrics (единственная секция с подтянутым верхом) ---------- */
+/* ---------- Metrics (мобилка = pt-0, десктоп = sm:pt-8) ---------- */
 function Metrics() {
   const stats: [string, string][] = [
-    ["3.7x","средний ROAS"],["120k+","лидов за 12 мес."],
-    ["350+","креативов протестировано"],["18","источников трафика"],
+    ["3.7x","средний ROAS"],
+    ["120k+","лидов за 12 мес."],
+    ["350+","креативов протестировано"],
+    ["18","источников трафика"],
   ];
   return (
-    <Section
-      id="metrics"
-      className="pt-0 pb-10 sm:pt-8 sm:pb-12"
-      bg="bg-white text-zinc-900"
-    >
+    <Section id="metrics" className="pt-0 pb-10 sm:pt-8 sm:pb-12" bg="bg-white text-zinc-900">
       <ul className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {stats.map(([v,l],i)=>(
           <li key={i} className="rounded-2xl border border-zinc-200 p-4 text-center">
@@ -275,7 +272,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
             <div>
               <div className="font-medium text-base sm:text-[15px]">{g.title}</div>
               <p className="mt-1 text-zinc-400">{g.desc}</p>
-              <ul className="mt-3 space-y-1 text-[12px] sm:text-xs text-zinc-500">
+              <ul className="mt-3 space-y-1 text-[12px] sm:text-xs text-зinc-500">
                 {g.bullets.map((b,idx)=>(
                   <li key={idx} className="flex items-center gap-2"><Check className="h-4 w-4" /> {b}</li>
                 ))}
@@ -355,7 +352,7 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
       <H2 className="text-black">Тарифы</H2>
       <ul className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
         {plans.map((p,i)=>(
-          <li key={i} className={`rounded-2xl border p-5 ${p.highlight ? "border-zinc-300" : "border-zinc-200"}`}>
+          <li key={i} className={`rounded-2xl border p-5 ${p.highlight ? "border-зinc-300" : "border-zinc-200"}`}>
             {p.highlight && (<span className="mb-3 inline-block rounded-full border border-zinc-300 px-2 py-0.5 text-xs">Популярный</span>)}
             <div className="text-lg font-semibold">{p.name}</div>
             <div className="mt-1 text-2xl font-bold">{p.price}</div>
@@ -472,10 +469,10 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void }) {
               <a href={tgLink} target="_blank" rel="noreferrer noopener" onClick={() => goTG("quiz_confirm_submit")} className="inline-flex items-center justify-center rounded-xl bg-zinc-900 text-white px-4 py-2 text-sm font-semibold w-full sm:w-auto">
                 Оставить заявку
               </a>
-              <button onClick={copySummary} className="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-4 py-2 text-sm w-full sm:w-auto">
+              <button onClick={copySummary} className="inline-flex items-center justify-center rounded-xl border border-зinc-300 px-4 py-2 text-sm w-full sm:w-auto">
                 {copied ? "Скопировано!" : "Скопировать ответы"}
               </button>
-              <a href={tgLink} target="_blank" rel="noreferrer noopener" onClick={() => goTG("quiz_confirm_close")} className="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-4 py-2 text-sm w-full sm:w-auto">
+              <a href={tgLink} target="_blank" rel="noreferrer noopener" onClick={() => goTG("quiz_confirm_close")} className="inline-flex items-center justify-center rounded-xl border border-зinc-300 px-4 py-2 text-sm w-full sm:w-auto">
                 Закрыть
               </a>
             </div>
@@ -489,10 +486,10 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void }) {
 /* ---------- Footer ---------- */
 function Footer() {
   return (
-    <footer className="border-t border-white/5 py-8 bg-zinc-950 text-zinc-400">
+    <footer className="border-t border-white/5 py-8 bg-зinc-950 text-зinc-400">
       <Section id="footer">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-          <div className="text-sm font-semibold text-zinc-100">TraffAgent</div>
+          <div className="text-sm font-semibold text-зinc-100">TraffAgent</div>
           <p className="text-xs">(c) {new Date().getFullYear()} TraffAgent. Все права защищены.</p>
         </div>
       </Section>
@@ -505,7 +502,7 @@ export default function App() {
   const [quizOpen, setQuizOpen] = useState(false);
   useEffect(()=>{ fbqTrack("ViewContent",{ content_name:"TraffAgent Landing" }) },[]);
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-200">
+    <div className="min-h-screen bg-zinc-950 text-зinc-200">
       <Header onQuiz={() => setQuizOpen(true)} />
       <main>
         <Hero onQuiz={() => setQuizOpen(true)} />
