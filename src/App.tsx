@@ -36,8 +36,8 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
           <a href="#services" className="hover:text-zinc-100">Услуги</a>
           <a href="#inside" className="hover:text-zinc-100">Внутри</a>
           <a href="#cases" className="hover:text-zinc-100">Кейсы</a>
-          <a href="#pricing" className="hover:text-зinc-100">Тарифы</a>
-          <a href="#faq" className="hover:text-зinc-100">FAQ</a>
+          <a href="#pricing" className="hover:text-zinc-100">Тарифы</a>
+          <a href="#faq" className="hover:text-zinc-100">FAQ</a>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -77,7 +77,7 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
 }
 
 /* ---------- Marquee ---------- */
-function ContinuousMarquee({ items, speed = 40, gap = 32 }: { items: string[]; speed?: number; gap?: number }) {
+function ContinuousMarquee({ items, speed = 40, gap = 24 }: { items: string[]; speed?: number; gap?: number }) {
   const stripRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(0);
   const [width, setWidth] = useState(0);
@@ -125,43 +125,58 @@ function ContinuousMarquee({ items, speed = 40, gap = 32 }: { items: string[]; s
   );
 }
 
-/* ---------- Mobile Hero (плотный, 1 строка marquee под кнопками) ---------- */
+/* ---------- Mobile Hero (только мобилка правлена) ---------- */
 function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
   const sources = ["META (Facebook • Instagram • Threads)", "YouTube", "TikTok", "Google", "Telegram", "Twitter / X", "LinkedIn", "Reddit"];
+
   return (
-    <Section id="home" className="min-h-[82vh] flex flex-col justify-start pt-0 pb-0 sm:pt-1 sm:pb-1" bg="bg-white text-black">
+    <Section
+      id="home"
+      // ВАЖНО: на мобилке (по умолчанию) — без лишних отступов; на sm (>=640px) — стандартные
+      className="min-h-[82vh] flex flex-col justify-start pt-0 pb-0 sm:pt-12 sm:pb-12"
+      bg="bg-white text-black"
+    >
       <div className="-mx-4 sm:mx-0">
         <div className="overflow-hidden border border-zinc-200 sm:rounded-md">
+          {/* верхняя плашка */}
           <div className="bg-red-600 text-white px-3 py-2 flex items-center justify-between">
             <div className="text-[11px] font-extrabold uppercase tracking-wider">Срочно</div>
             <div className="text-[11px] font-semibold">Объявление</div>
           </div>
 
-          <div className="px-4 sm:px-5 py-4 sm:py-5 space-y-4">
+          {/* контент */}
+          <div className="px-4 sm:px-5 py-4 sm:py-6 space-y-4">
             <div className="inline-flex items-center gap-2">
               <span className="bg-yellow-400 text-black text-[10px] font-extrabold uppercase px-2 py-0.5 rounded">Эксклюзив</span>
               <span className="text-[10px] text-zinc-600">TraffAgent • медиа баинг</span>
             </div>
 
-            <h1 className="text-[32px] sm:text-[38px] leading-[1.08] font-extrabold tracking-tight">
+            <h1 className="text-[32px] leading-[1.08] font-extrabold tracking-tight sm:text-[40px]">
               Traffagent - трафик без границ
             </h1>
 
-            <p className="text-[15px] sm:text-[16px] leading-snug text-zinc-700 max-w-[46ch]">
+            <p className="text-[15px] leading-snug text-zinc-700 max-w-[46ch] sm:text-[16px]">
               Выходим за пределы стандартного таргета: медиабаинг, креативы, аналитика и автоматизация, которые превращают клики в прибыль.
             </p>
 
+            {/* CTA */}
             <div className="grid grid-cols-1 gap-2">
-              <button onClick={() => { fbqTrack("Lead", { place: "kp_mobile_start" }); onQuiz(); }} className="inline-flex items-center justify-center rounded-none sm:rounded-md bg-black text-white px-5 py-4 text-[16px] font-extrabold uppercase tracking-wide w-full">
+              <button
+                onClick={() => { fbqTrack("Lead", { place: "kp_mobile_start" }); onQuiz(); }}
+                className="inline-flex items-center justify-center rounded-none sm:rounded-md bg-black text-white px-5 py-4 text-[16px] font-extrabold uppercase tracking-wide w-full"
+              >
                 Хочу продажи
               </button>
-              <button onClick={() => { fbqTrack("Lead", { place: "kp_mobile_tg" }); onQuiz(); }} className="inline-flex items-center justify-center rounded-none sm:rounded-md border border-zinc-900 px-5 py-4 text-[16px] font-extrabold uppercase tracking-wide w-full">
+              <button
+                onClick={() => { fbqTrack("Lead", { place: "kp_mobile_tg" }); onQuiz(); }}
+                className="inline-flex items-center justify-center rounded-none sm:rounded-md border border-zinc-900 px-5 py-4 text-[16px] font-extrabold uppercase tracking-wide w-full"
+              >
                 Похуй, делаем!
               </button>
             </div>
           </div>
 
-          {/* одна бегущая строка сразу под кнопками */}
+          {/* ОДНА бегущая строка — сразу под кнопками, внутри карточки */}
           <div className="border-t border-zinc-200">
             <ContinuousMarquee items={sources} speed={40} gap={24} />
           </div>
@@ -171,14 +186,19 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-/* ---------- Desktop Hero (слегка плотнее) ---------- */
+/* ---------- Desktop Hero (как было) ---------- */
 function Hero({ onQuiz }: { onQuiz: () => void }) {
   const sources = ["META (Facebook • Instagram • Threads)", "YouTube", "TikTok", "Google", "Telegram", "Twitter / X", "LinkedIn", "Reddit"];
   return (
     <>
-      <div className="sm:hidden"><KPMobileHero onQuiz={onQuiz} /></div>
+      {/* МОБИЛКА */}
+      <div className="sm:hidden">
+        <KPMobileHero onQuiz={onQuiz} />
+      </div>
+
+      {/* ДЕСКТОП/ПЛАНШЕТ — без изменений */}
       <div className="hidden sm:block">
-        <Section id="home" className="pt-10 pb-10 sm:pt-12 sm:pb-12" bg="bg-white text-zinc-900">
+        <Section id="home" className="pt-12 pb-12" bg="bg-white text-zinc-900">
           <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center">
             <motion.div variants={item} className="lg:col-span-7">
               <div className="bg-red-600 text-white px-3 py-2 flex items-center justify-between rounded-md mb-4">
@@ -214,14 +234,19 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-/* ---------- Metrics (подтянули к строке) ---------- */
+/* ---------- Metrics (подтянули к строке на мобилке) ---------- */
 function Metrics() {
   const stats: [string, string][] = [
     ["3.7x","средний ROAS"],["120k+","лидов за 12 мес."],
     ["350+","креативов протестировано"],["18","источников трафика"],
   ];
   return (
-    <Section id="metrics" className="pt-6 pb-10 sm:pt-6 sm:pb-12" bg="bg-white text-zinc-900">
+    <Section
+      id="metrics"
+      // мобилка ближе (pt-6), на sm возвращаем стандартный ритм
+      className="pt-6 pb-10 sm:pt-12 sm:pb-12"
+      bg="bg-white text-zinc-900"
+    >
       <ul className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {stats.map(([v,l],i)=>(
           <li key={i} className="rounded-2xl border border-zinc-200 p-4 text-center">
@@ -243,7 +268,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
     { title:"Аналитика + Отчетность", desc:"Серверный трекинг, событийная модель, сводка в BI.", bullets:["Сквозная аналитика","Дашборды","KPI weekly"] },
   ];
   return (
-    <Section id="services" className="pt-6 pb-10 sm:pt-6 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
+    <Section id="services" className="pt-6 pb-10 sm:pt-12 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
       <Kicker>Что мы делаем</Kicker>
       <H2>Услуги</H2>
       <ul className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
@@ -278,7 +303,7 @@ function Inside() {
     ["Рост","Оптимизация по LTV/ROAS, автоматизация, масштаб."],
   ];
   return (
-    <Section id="inside" className="pt-6 pb-10 sm:pt-6 sm:pb-12" bg="bg-white text-black">
+    <Section id="inside" className="pt-6 pb-10 sm:pt-12 sm:pb-12" bg="bg-white text-black">
       <Kicker>Как это устроено</Kicker>
       <H2>Внутри TraffAgent</H2>
       <ol className="mt-6 space-y-3">
@@ -301,7 +326,7 @@ function Cases() {
     ["EdTech mobile","CPI -37%","Meta + пачки креативов"],
   ];
   return (
-    <Section id="cases" className="pt-6 pb-10 sm:pt-6 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
+    <Section id="cases" className="pt-6 pb-10 sm:pt-12 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
       <Kicker>Партнеры</Kicker>
       <H2>Кейсы</H2>
       <ul className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -327,7 +352,7 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
     { name:"Скейл", price:"кастом", desc:"Под высокие бюджеты и KPI", features:["Кастомная команда","R&D и анти-бан","Серверный трекинг","SLA по KPI"], highlight:false },
   ];
   return (
-    <Section id="pricing" className="pt-6 pb-10 sm:pt-6 sm:pb-12" bg="bg-white text-zinc-900">
+    <Section id="pricing" className="pt-6 pb-10 sm:pt-12 sm:pb-12" bg="bg-white text-zinc-900">
       <Kicker>Прозрачные условия</Kicker>
       <H2 className="text-black">Тарифы</H2>
       <ul className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -358,7 +383,7 @@ function FAQ() {
     ["Как считаете атрибуцию?","Серверный трекинг, событийная модель, сводка в BI."],
   ];
   return (
-    <Section id="faq" className="pt-6 pb-10 sm:pt-6 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
+    <Section id="faq" className="pt-6 pb-10 sm:pt-12 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
       <Kicker>Вопросы</Kicker>
       <H2>FAQ</H2>
       <ul className="mt-6 divide-y divide-white/10 rounded-2xl border border-white/10">
