@@ -34,8 +34,8 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
         <a href="#home" className="text-sm font-semibold tracking-tight">TraffAgent</a>
         <div className="hidden md:flex items-center gap-6 text-sm text-zinc-400">
           <a href="#services" className="hover:text-zinc-100">Услуги</a>
-          <a href="#inside" className="hover:text-зinc-100">Внутри</a>
-          <a href="#cases" className="hover:text-зinc-100">Кейсы</a>
+          <a href="#inside" className="hover:text-zinc-100">Внутри</a>
+          <a href="#cases" className="hover:text-zinc-100">Кейсы</a>
           <a href="#pricing" className="hover:text-зinc-100">Тарифы</a>
           <a href="#faq" className="hover:text-зinc-100">FAQ</a>
         </div>
@@ -125,11 +125,11 @@ function ContinuousMarquee({ items, speed = 40, gap = 32 }: { items: string[]; s
   );
 }
 
-/* ---------- Mobile Hero (плотный, marquee под кнопками) ---------- */
+/* ---------- Mobile Hero (плотный, 1 строка marquee под кнопками) ---------- */
 function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
-  const sources = ["META (Facebook - Instagram - Threads)", "YouTube", "TikTok", "Google", "Telegram", "Twitter"];
+  const sources = ["META (Facebook • Instagram • Threads)", "YouTube", "TikTok", "Google", "Telegram", "Twitter / X", "LinkedIn", "Reddit"];
   return (
-    <Section id="home" className="min-h-[82vh] flex flex-col justify-start pt-0 pb-2 sm:pt-1 sm:pb-3" bg="bg-white text-black">
+    <Section id="home" className="min-h-[82vh] flex flex-col justify-start pt-0 pb-0 sm:pt-1 sm:pb-1" bg="bg-white text-black">
       <div className="-mx-4 sm:mx-0">
         <div className="overflow-hidden border border-zinc-200 sm:rounded-md">
           <div className="bg-red-600 text-white px-3 py-2 flex items-center justify-between">
@@ -152,24 +152,18 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
             </p>
 
             <div className="grid grid-cols-1 gap-2">
-              <button
-                onClick={() => { fbqTrack("Lead", { place: "kp_mobile_start" }); onQuiz(); }}
-                className="inline-flex items-center justify-center rounded-none sm:rounded-md bg-black text-white px-5 py-4 text-[16px] font-extrabold uppercase tracking-wide w-full"
-              >
+              <button onClick={() => { fbqTrack("Lead", { place: "kp_mobile_start" }); onQuiz(); }} className="inline-flex items-center justify-center rounded-none sm:rounded-md bg-black text-white px-5 py-4 text-[16px] font-extrabold uppercase tracking-wide w-full">
                 Хочу продажи
               </button>
-              <button
-                onClick={() => { fbqTrack("Lead", { place: "kp_mobile_tg" }); onQuiz(); }}
-                className="inline-flex items-center justify-center rounded-none sm:rounded-md border border-zinc-900 px-5 py-4 text-[16px] font-extrabold uppercase tracking-wide w-full"
-              >
+              <button onClick={() => { fbqTrack("Lead", { place: "kp_mobile_tg" }); onQuiz(); }} className="inline-flex items-center justify-center rounded-none sm:rounded-md border border-zinc-900 px-5 py-4 text-[16px] font-extrabold uppercase tracking-wide w-full">
                 Похуй, делаем!
               </button>
             </div>
           </div>
 
-          {/* Бегущая строка — сразу под кнопками, внутри карточки */}
+          {/* одна бегущая строка сразу под кнопками */}
           <div className="border-t border-zinc-200">
-            <ContinuousMarquee items={sources} speed={40} gap={32} />
+            <ContinuousMarquee items={sources} speed={40} gap={24} />
           </div>
         </div>
       </div>
@@ -179,7 +173,7 @@ function KPMobileHero({ onQuiz }: { onQuiz: () => void }) {
 
 /* ---------- Desktop Hero (слегка плотнее) ---------- */
 function Hero({ onQuiz }: { onQuiz: () => void }) {
-  const sources = ["META (Facebook - Instagram - Threads)", "YouTube", "TikTok", "Google", "Telegram", "Twitter"];
+  const sources = ["META (Facebook • Instagram • Threads)", "YouTube", "TikTok", "Google", "Telegram", "Twitter / X", "LinkedIn", "Reddit"];
   return (
     <>
       <div className="sm:hidden"><KPMobileHero onQuiz={onQuiz} /></div>
@@ -210,7 +204,7 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
 
             <div className="lg:col-span-12">
               <div className="border-t border-zinc-200">
-                <ContinuousMarquee items={sources} speed={40} gap={32} />
+                <ContinuousMarquee items={sources} speed={40} gap={24} />
               </div>
             </div>
           </motion.div>
@@ -220,14 +214,14 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-/* ---------- Metrics ---------- */
+/* ---------- Metrics (подтянули к строке) ---------- */
 function Metrics() {
   const stats: [string, string][] = [
     ["3.7x","средний ROAS"],["120k+","лидов за 12 мес."],
     ["350+","креативов протестировано"],["18","источников трафика"],
   ];
   return (
-    <Section id="metrics" className="py-10 sm:py-12" bg="bg-white text-zinc-900">
+    <Section id="metrics" className="pt-6 pb-10 sm:pt-6 sm:pb-12" bg="bg-white text-zinc-900">
       <ul className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {stats.map(([v,l],i)=>(
           <li key={i} className="rounded-2xl border border-zinc-200 p-4 text-center">
@@ -249,7 +243,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
     { title:"Аналитика + Отчетность", desc:"Серверный трекинг, событийная модель, сводка в BI.", bullets:["Сквозная аналитика","Дашборды","KPI weekly"] },
   ];
   return (
-    <Section id="services" className="py-10 sm:py-12" bg="bg-zinc-950 text-zinc-100">
+    <Section id="services" className="pt-6 pb-10 sm:pt-6 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
       <Kicker>Что мы делаем</Kicker>
       <H2>Услуги</H2>
       <ul className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
@@ -284,7 +278,7 @@ function Inside() {
     ["Рост","Оптимизация по LTV/ROAS, автоматизация, масштаб."],
   ];
   return (
-    <Section id="inside" className="py-10 sm:py-12" bg="bg-white text-black">
+    <Section id="inside" className="pt-6 pb-10 sm:pt-6 sm:pb-12" bg="bg-white text-black">
       <Kicker>Как это устроено</Kicker>
       <H2>Внутри TraffAgent</H2>
       <ol className="mt-6 space-y-3">
@@ -307,7 +301,7 @@ function Cases() {
     ["EdTech mobile","CPI -37%","Meta + пачки креативов"],
   ];
   return (
-    <Section id="cases" className="py-10 sm:py-12" bg="bg-zinc-950 text-zinc-100">
+    <Section id="cases" className="pt-6 pb-10 sm:pt-6 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
       <Kicker>Партнеры</Kicker>
       <H2>Кейсы</H2>
       <ul className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -333,7 +327,7 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
     { name:"Скейл", price:"кастом", desc:"Под высокие бюджеты и KPI", features:["Кастомная команда","R&D и анти-бан","Серверный трекинг","SLA по KPI"], highlight:false },
   ];
   return (
-    <Section id="pricing" className="py-10 sm:py-12" bg="bg-white text-zinc-900">
+    <Section id="pricing" className="pt-6 pb-10 sm:pt-6 sm:pb-12" bg="bg-white text-zinc-900">
       <Kicker>Прозрачные условия</Kicker>
       <H2 className="text-black">Тарифы</H2>
       <ul className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -343,7 +337,7 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
             <div className="text-lg font-semibold">{p.name}</div>
             <div className="mt-1 text-2xl font-bold">{p.price}</div>
             <p className="mt-1 text-sm text-zinc-600">{p.desc}</p>
-            <ul className="mt-4 space-y-1 text-sm text-зinc-600">
+            <ul className="mt-4 space-y-1 text-sm text-zinc-600">
               {p.features.map((f,idx)=>(<li key={idx} className="flex items-center gap-2"><Check className="h-4 w-4" /> {f}</li>))}
             </ul>
             <button onClick={()=>{ fbqTrack("Lead",{place:"pricing",plan:p.name}); onQuiz(); }} className="mt-5 inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-3 text-sm font-medium text-white w-full">
@@ -364,14 +358,14 @@ function FAQ() {
     ["Как считаете атрибуцию?","Серверный трекинг, событийная модель, сводка в BI."],
   ];
   return (
-    <Section id="faq" className="py-10 sm:py-12" bg="bg-зinc-950 text-зinc-100">
+    <Section id="faq" className="pt-6 pb-10 sm:pt-6 sm:pb-12" bg="bg-zinc-950 text-zinc-100">
       <Kicker>Вопросы</Kicker>
       <H2>FAQ</H2>
       <ul className="mt-6 divide-y divide-white/10 rounded-2xl border border-white/10">
         {qa.map(([q,a],i)=>(
           <li key={i} className="p-4">
             <div className="text-sm font-medium">{q}</div>
-            <p className="mt-1 text-sm text-зinc-400">{a}</p>
+            <p className="mt-1 text-sm text-zinc-400">{a}</p>
           </li>
         ))}
       </ul>
@@ -426,10 +420,10 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div className="absolute inset-0 bg-black/60" onClick={() => { goTG("quiz_backdrop_close"); onClose(); }} />
-      <div className="relative z-[101] w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl bg-white text-зinc-900 shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-зinc-200">
+      <div className="relative z-[101] w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl bg-white text-zinc-900 shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200">
           <div className="text-sm font-semibold">Мини-квиз</div>
-          <button onClick={() => { goTG("quiz_x_close"); onClose(); }} className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-зinc-200" aria-label="Закрыть">
+          <button onClick={() => { goTG("quiz_x_close"); onClose(); }} className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-zinc-200" aria-label="Закрыть">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -439,26 +433,26 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void }) {
             <div className="text-sm font-medium">{questions[step].text}</div>
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
               {questions[step].options.map(opt => (
-                <button key={opt} onClick={() => choose(opt)} className="w-full rounded-xl border border-зinc-300 px-4 py-3 text-left active:scale-[.99]">
+                <button key={opt} onClick={() => choose(opt)} className="w-full rounded-xl border border-zinc-300 px-4 py-3 text-left active:scale-[.99]">
                   {opt}
                 </button>
               ))}
             </div>
-            <div className="mt-3 text-xs text-зinc-500">Шаг {step + 1} из {questions.length}</div>
+            <div className="mt-3 text-xs text-zinc-500">Шаг {step + 1} из {questions.length}</div>
           </div>
         ) : (
           <div className="px-5 py-5 space-y-4">
             <div className="text-sm font-medium">Почти готово — отправим заявку в Telegram?</div>
-            <p className="text-sm text-зinc-600">Ваши ответы ниже. Можно скопировать и отправить в чат.</p>
-            <textarea ref={textRef} value={summaryText} readOnly disabled className="w-full rounded-xl border border-зinc-300 px-3 py-3 text-sm text-зinc-700" />
+            <p className="text-sm text-zinc-600">Ваши ответы ниже. Можно скопировать и отправить в чат.</p>
+            <textarea ref={textRef} value={summaryText} readOnly disabled className="w-full rounded-xl border border-zinc-300 px-3 py-3 text-sm text-zinc-700" />
             <div className="flex flex-col sm:flex-row gap-2">
-              <a href={tgLink} target="_blank" rel="noreferrer noopener" onClick={() => goTG("quiz_confirm_submit")} className="inline-flex items-center justify-center rounded-xl bg-зinc-900 text-white px-4 py-2 text-sm font-semibold w-full sm:w-auto">
+              <a href={tgLink} target="_blank" rel="noreferrer noopener" onClick={() => goTG("quiz_confirm_submit")} className="inline-flex items-center justify-center rounded-xl bg-zinc-900 text-white px-4 py-2 text-sm font-semibold w-full sm:w-auto">
                 Оставить заявку
               </a>
-              <button onClick={copySummary} className="inline-flex items-center justify-center rounded-xl border border-зinc-300 px-4 py-2 text-sm w-full sm:w-auto">
+              <button onClick={copySummary} className="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-4 py-2 text-sm w-full sm:w-auto">
                 {copied ? "Скопировано!" : "Скопировать ответы"}
               </button>
-              <a href={tgLink} target="_blank" rel="noreferrer noopener" onClick={() => goTG("quiz_confirm_close")} className="inline-flex items-center justify-center rounded-xl border border-зinc-300 px-4 py-2 text-sm w-full sm:w-auto">
+              <a href={tgLink} target="_blank" rel="noreferrer noopener" onClick={() => goTG("quiz_confirm_close")} className="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-4 py-2 text-sm w-full sm:w-auto">
                 Закрыть
               </a>
             </div>
@@ -472,10 +466,10 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void }) {
 /* ---------- Footer ---------- */
 function Footer() {
   return (
-    <footer className="border-t border-white/5 py-8 bg-зinc-950 text-зinc-400">
+    <footer className="border-t border-white/5 py-8 bg-zinc-950 text-zinc-400">
       <Section id="footer">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-          <div className="text-sm font-semibold text-зinc-100">TraffAgent</div>
+          <div className="text-sm font-semibold text-zinc-100">TraffAgent</div>
           <p className="text-xs">(c) {new Date().getFullYear()} TraffAgent. Все права защищены.</p>
         </div>
       </Section>
@@ -488,7 +482,7 @@ export default function App() {
   const [quizOpen, setQuizOpen] = useState(false);
   useEffect(()=>{ fbqTrack("ViewContent",{ content_name:"TraffAgent Landing" }) },[]);
   return (
-    <div className="min-h-screen bg-зinc-950 text-зinc-200">
+    <div className="min-h-screen bg-zinc-950 text-zinc-200">
       <Header onQuiz={() => setQuizOpen(true)} />
       <main>
         <Hero onQuiz={() => setQuizOpen(true)} />
