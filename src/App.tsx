@@ -113,7 +113,7 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
         <motion.div variants={item} className="lg:col-span-7">
           <Kicker>Performance-маркетинг под KPI</Kicker>
           <h1 className="mt-2 text-3xl sm:text-4xl md:text-6xl font-extrabold leading-snug">
-            TraffAgent <span className="gradient-text">— performance-маркетинг под KPI</span>
+            <span className="gradient-text"> Performance-трафик под KPI</span>
           </h1>
           <p className="mt-4 max-w-2xl text-zinc-600 text-base sm:text-lg">
             Запускаем и масштабируем платный трафик под окупаемость и LTV. Креативы, закупка, аналитика и автоматизация.
