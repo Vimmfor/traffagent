@@ -2,6 +2,15 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check, Menu, Sparkles, X } from "lucide-react";
 
+/**
+ * Полный App.tsx
+ * - Обновлённый Hero: только цветной слоган (без слова TraffAgent), увеличен размер
+ * - Насыщенная бегущая строка (выше, крупнее, с разделителями и фоном)
+ * - Ровные кнопки в «Услуги» и «Тарифы» (h-full flex-col + mt-auto)
+ * - Квиз, якоря, анимации
+ */
+
+// ==== опциональные интеграции (пока пустые) ====
 const LEAD_WEBHOOK = "";
 const TG_BOT_TOKEN = "";
 const TG_CHAT_ID = "";
@@ -9,9 +18,11 @@ declare global { interface Window { __TG_TOKEN__?: string; __TG_CHAT__?: string;
 const BOT_TOKEN = (typeof window !== "undefined" && window.__TG_TOKEN__) || TG_BOT_TOKEN;
 const CHAT_ID   = (typeof window !== "undefined" && window.__TG_CHAT__)  || TG_CHAT_ID;
 
+// ==== анимации ====
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 
+// ==== утилиты ====
 function Section({ id, children, className = "", bg = "" }: { id?: string; children: React.ReactNode; className?: string; bg?: string }) {
   return <section id={id} className={`${bg} relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 ${className}`}>{children}</section>;
 }
@@ -22,11 +33,13 @@ function H2({ children, className = "" }: { children: React.ReactNode; className
   return <h2 className={`mt-2 text-[22px] sm:text-2xl md:text-4xl font-semibold leading-tight tracking-tight ${className}`}>{children}</h2>;
 }
 
-function ContinuousMarquee({ items, speed = 48, gap = 40 }: { items: string[]; speed?: number; gap?: number }) {
+// ==== бегущая строка (крупнее и насыщеннее) ====
+function ContinuousMarquee({ items, speed = 55, gap = 72 }: { items: string[]; speed?: number; gap?: number }) {
   const stripRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(0);
   const [width, setWidth] = useState(0);
   const prefersReduced = useReducedMotion();
+
   useEffect(() => {
     const recalc = () => { if (stripRef.current) setWidth(stripRef.current.getBoundingClientRect().width); };
     recalc();
@@ -36,23 +49,48 @@ function ContinuousMarquee({ items, speed = 48, gap = 40 }: { items: string[]; s
     window.addEventListener("resize", recalc);
     return () => { if (ro && stripRef.current) ro.disconnect(); window.removeEventListener("resize", recalc); };
   }, []);
+
   useEffect(() => {
     if (prefersReduced) return;
     let raf = 0; let prev = performance.now();
-    const tick = (now: number) => { const dt = now - prev; prev = now; setOffset(o => (width <= 0 ? 0 : (o + (speed * dt) / 1000) % width)); raf = requestAnimationFrame(tick); };
-    raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf);
+    const tick = (now: number) => {
+      const dt = now - prev; prev = now;
+      setOffset(o => (width <= 0 ? 0 : (o + (speed * dt) / 1000) % width));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, [speed, width, prefersReduced]);
+
   const strip = (k: string, x: number) => (
-    <div key={k} ref={k==="a"?stripRef:null} className="absolute left-0 top-0 inline-flex items-center text-xs text-zinc-600"
-      style={{ transform: `translateX(${x}px)`, gap: `${gap}px`, whiteSpace: "nowrap", padding: "10px 0" }}>
-      {items.map((t, i) => (<span key={`${k}-${i}`} className="opacity-80">{t}</span>))}
+    <div
+      key={k}
+      ref={k==="a"?stripRef:null}
+      className="absolute left-0 top-0 inline-flex items-center font-medium uppercase tracking-wide text-zinc-700"
+      style={{ transform: `translateX(${x}px)`, gap: `${gap}px`, whiteSpace: "nowrap", padding: "10px 0" }}
+    >
+      {items.map((t, i) => (
+        <React.Fragment key={`${k}-${i}`}>
+          <span className="opacity-90">{t}</span>
+          {i !== items.length - 1 && <span aria-hidden="true" className="mx-3">•</span>}
+        </React.Fragment>
+      ))}
       <span aria-hidden="true" style={{ display: "inline-block", width: gap }} />
     </div>
   );
+
   const x1 = -offset, x2 = width - offset;
-  return <div className="relative overflow-hidden border-t border-zinc-200"><div className="relative h-[38px]">{strip("a", x1)}{strip("b", x2)}</div></div>;
+  return (
+    <div className="relative overflow-hidden border-y border-zinc-200 bg-zinc-50">
+      <div className="relative h-[56px] sm:h-[64px] px-2 sm:px-4">
+        {strip("a", x1)}
+        {strip("b", x2)}
+      </div>
+    </div>
+  );
 }
 
+// ==== Header ====
 function Header({ onQuiz }: { onQuiz: () => void }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -70,7 +108,7 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
         <a href="#home" className="text-sm font-semibold tracking-tight">TraffAgent</a>
         <div className="hidden md:flex items-center gap-6 text-sm text-zinc-400">
           <a href="#services" className="hover:text-zinc-100">Услуги</a>
-          <a href="#inside" className="hover:text-зinc-100">Внутри</a>
+          <a href="#inside" className="hover:text-zinc-100">Внутри</a>
           <a href="#cases" className="hover:text-zinc-100">Кейсы</a>
           <a href="#pricing" className="hover:text-zinc-100">Тарифы</a>
           <a href="#faq" className="hover:text-zinc-100">FAQ</a>
@@ -98,9 +136,21 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
+// ==== Hero (без слова TraffAgent, только цветной слоган) ====
 function Hero({ onQuiz }: { onQuiz: () => void }) {
   const prefersReduced = useReducedMotion();
-  const sources = ["META (Facebook - Instagram - Threads)", "YouTube", "TikTok", "Google", "Telegram", "Twitter"];
+  const sources = [
+    "Meta (Facebook + Instagram + Threads)",
+    "YouTube",
+    "TikTok",
+    "Google Ads",
+    "Telegram",
+    "Twitter / X",
+    "LinkedIn Ads",
+    "Reddit Ads",
+    "Snapchat Ads"
+  ];
+
   return (
     <Section id="home" className="pt-14 pb-16 sm:pt-16 sm:pb-20" bg="bg-white text-zinc-900">
       {!prefersReduced && (
@@ -112,8 +162,8 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
       <motion.div variants={container} initial="hidden" animate="show" className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center">
         <motion.div variants={item} className="lg:col-span-7">
           <Kicker>Performance-маркетинг под KPI</Kicker>
-          <h1 className="mt-2 text-3xl sm:text-4xl md:text-6xl font-extrabold leading-snug">
-            <span className="gradient-text"> Performance-трафик под KPI</span>
+          <h1 className="mt-2 text-[40px] sm:text-6xl md:text-7xl font-extrabold leading-tight tracking-tight">
+            <span className="gradient-text">performance маркетинг под KPI</span>
           </h1>
           <p className="mt-4 max-w-2xl text-zinc-600 text-base sm:text-lg">
             Запускаем и масштабируем платный трафик под окупаемость и LTV. Креативы, закупка, аналитика и автоматизация.
@@ -127,16 +177,24 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
             </a>
           </div>
         </motion.div>
+
+        {/* Бегущая строка - увеличенная полоса */}
         <div className="lg:col-span-12">
-          <ContinuousMarquee items={sources} speed={48} gap={40} />
+          <ContinuousMarquee items={sources} speed={55} gap={72} />
         </div>
       </motion.div>
     </Section>
   );
 }
 
+// ==== Metrics ====
 function Metrics() {
-  const stats: [string, string][] = [["3.7x","средний ROAS"],["120k+","лидов за 12 мес."],["350+","креативов протестировано"],["18","источников трафика"]];
+  const stats: [string, string][] = [
+    ["3.7x","средний ROAS"],
+    ["120k+","лидов за 12 мес."],
+    ["350+","креативов протестировано"],
+    ["18","источников трафика"]
+  ];
   return (
     <Section id="metrics" className="py-12" bg="bg-white text-zinc-900">
       <ul className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -151,6 +209,7 @@ function Metrics() {
   );
 }
 
+// ==== Services (кнопки выровнены по низу) ====
 function Services({ onQuiz }: { onQuiz: () => void }) {
   const groups = [
     { title: "Медиабаинг + Комплаенс", desc: "Meta, Google, TikTok, альтернативы. Anti-ban, прогрев, резервы.", bullets: ["Гипотезы и тесты", "Масштабирование", "Кейсы по вайт/грей"] },
@@ -173,7 +232,13 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
                 {g.bullets.map((b, idx) => (<li key={idx} className="flex items-center gap-2"><Check className="h-4 w-4 text-zinc-300" /> {b}</li>))}
               </ul>
             </div>
-            <button type="button" onClick={onQuiz} className="mt-auto inline-flex items-center justify-center rounded-xl bg-white text-black px-4 py-2 text-sm font-medium w-full hover:bg-zinc-100 transition-colors">Запустить траф</button>
+            <button
+              type="button"
+              onClick={onQuiz}
+              className="mt-auto inline-flex items-center justify-center rounded-xl bg-white text-black px-4 py-2 text-sm font-medium w-full hover:bg-zinc-100 transition-colors"
+            >
+              Запустить траф
+            </button>
           </li>
         ))}
       </ul>
@@ -181,8 +246,15 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
+// ==== Inside ====
 function Inside() {
-  const steps: [string, string][] = [["Discovery","Погружаемся в продукт, аудиторию и цели. KPI и рамки."],["Стратегия","Каналы, воронки, креативы, бюджет по спринтам."],["Продакшн","Креативы, лендинги/квизы, трекинг и CRM."],["Запуск","Закупка трафика, быстрые итерации, анти-бан."],["Рост","Оптимизация по LTV/ROAS, автоматизация, масштаб."]];
+  const steps: [string, string][] = [
+    ["Discovery","Погружаемся в продукт, аудиторию и цели. KPI и рамки."],
+    ["Стратегия","Каналы, воронки, креативы, бюджет по спринтам."],
+    ["Продакшн","Креативы, лендинги/квизы, трекинг и CRM."],
+    ["Запуск","Закупка трафика, быстрые итерации, анти-бан."],
+    ["Рост","Оптимизация по LTV/ROAS, автоматизация, масштаб."]
+  ];
   return (
     <Section id="inside" className="py-12" bg="bg-white text-zinc-900">
       <Kicker>Как это устроено</Kicker>
@@ -199,8 +271,13 @@ function Inside() {
   );
 }
 
+// ==== Cases ====
 function Cases() {
-  const list: [string, string, string][] = [["FinTech SaaS","+212% MRR","Google + LinkedIn + контент"],["eCom здоровье","ROAS 4.1","TikTok UGC + квиз"],["EdTech mobile","CPI -37%","Meta + пачки креативов"]];
+  const list: [string, string, string][] = [
+    ["FinTech SaaS","+212% MRR","Google + LinkedIn + контент"],
+    ["eCom здоровье","ROAS 4.1","TikTok UGC + квиз"],
+    ["EdTech mobile","CPI -37%","Meta + пачки креативов"]
+  ];
   return (
     <Section id="cases" className="py-12" bg="bg-zinc-950 text-zinc-100">
       <Kicker>Партнеры</Kicker>
@@ -220,6 +297,7 @@ function Cases() {
   );
 }
 
+// ==== Pricing (кнопки выровнены по низу) ====
 function Pricing({ onQuiz }: { onQuiz: () => void }) {
   const plans = [
     { name: "Старт", price: "от $1k", desc: "Для тестов и первых продаж", features: ["Стратегия", "3-5 подходов", "1-2 канала", "Еженед. отчет"], highlight: false },
@@ -240,7 +318,11 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
             <ul className="mt-4 space-y-1 text-sm text-zinc-600">
               {p.features.map((f, idx) => (<li key={idx} className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-500" /> {f}</li>))}
             </ul>
-            <button type="button" onClick={onQuiz} className="mt-auto inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 text-sm font-medium text-white w-full shadow-lg hover:shadow-xl transition-shadow">
+            <button
+              type="button"
+              onClick={onQuiz}
+              className="mt-auto inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 text-sm font-medium text-white w-full shadow-lg hover:shadow-xl transition-shadow"
+            >
               Берем
             </button>
           </li>
@@ -250,8 +332,13 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
+// ==== FAQ ====
 function FAQ() {
-  const qa: [string, string][] = [["С какими вертикалями работаете?","E-com, edtech, подписки, mobile, SaaS, финтех."],["Когда ждать результат?","Первые инсайты за 7-14 дней спринта, масштаб 1-2 месяца."],["Как считаете атрибуцию?","Серверный трекинг, событийная модель, сводка в BI."]];
+  const qa: [string, string][] = [
+    ["С какими вертикалями работаете?","E-com, edtech, подписки, mobile, SaaS, финтех."],
+    ["Когда ждать результат?","Первые инсайты за 7-14 дней спринта, масштаб 1-2 месяца."],
+    ["Как считаете атрибуцию?","Серверный трекинг, событийная модель, сводка в BI."]
+  ];
   return (
     <Section id="faq" className="py-12" bg="bg-zinc-950 text-zinc-100">
       <Kicker>Вопросы</Kicker>
@@ -268,6 +355,7 @@ function FAQ() {
   );
 }
 
+// ==== Footer ====
 function Footer() {
   return (
     <footer className="border-t border-white/5 py-8 bg-zinc-950 text-zinc-400">
@@ -281,10 +369,18 @@ function Footer() {
   );
 }
 
+// ==== Quiz ====
 function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
   async function sendLead(payload: any) {
     try {
-      const text = ["Новая заявка TraffAgent", `Бюджет: ${payload.budget || '-'}`, `Ниша: ${payload.niche || '-'}`, `GEO: ${payload.geo || '-'}`, `UA: ${navigator.userAgent}`, `Time: ${new Date().toISOString()}`].join("\n");
+      const text = [
+        "Новая заявка TraffAgent",
+        `Бюджет: ${payload.budget || '-'}`,
+        `Ниша: ${payload.niche || '-'}`,
+        `GEO: ${payload.geo || '-'}`,
+        `UA: ${navigator.userAgent}`,
+        `Time: ${new Date().toISOString()}`
+      ].join("\n");
       if (LEAD_WEBHOOK) {
         await fetch(LEAD_WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, answers: payload }), keepalive: true });
         return;
@@ -361,6 +457,7 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
   );
 }
 
+// ==== Корневой компонент ====
 function TraffAgentLanding() {
   const [quizOpen, setQuizOpen] = useState(false);
   useEffect(() => {
@@ -380,8 +477,15 @@ function TraffAgentLanding() {
         <FAQ />
       </main>
       <Footer />
+      {/* мобильная CTA */}
       <div className="fixed bottom-3 inset-x-3 sm:hidden z-30">
-        <button type="button" onClick={() => setQuizOpen(true)} className="flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 text-white px-4 py-3 text-base font-semibold shadow-lg shadow-black/30 w-full">Берем - обсудить проект</button>
+        <button
+          type="button"
+          onClick={() => setQuizOpen(true)}
+          className="flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 text-white px-4 py-3 text-base font-semibold shadow-lg shadow-black/30 w-full"
+        >
+          Берем - обсудить проект
+        </button>
       </div>
       <QuizModal open={quizOpen} onClose={() => setQuizOpen(false)} />
     </div>
