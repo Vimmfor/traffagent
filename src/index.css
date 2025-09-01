@@ -1,4 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 html, body, #root { height: 100%; }
+
+.card { transition: transform .3s ease-out; }
+.card:hover { transform: translateY(-4px); }
+.glass { background-color: rgba(255,255,255,.05); backdrop-filter: blur(8px); }
+.gradient-text { background: linear-gradient(90deg, #7c3aed, #2563eb, #f472b6); -webkit-background-clip: text; background-clip: text; color: transparent; }
