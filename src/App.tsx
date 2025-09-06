@@ -289,10 +289,10 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
         <motion.div variants={item} className="lg:col-span-7">
           <Kicker>Performance-маркетинг под KPI</Kicker>
           <h1 className="mt-3 text-[44px] leading-[1.06] sm:text-7xl sm:leading-[1.06] md:text-[88px] md:leading-[1.04] font-extrabold tracking-tight">
-            <span className="hero-gradient-text">performance маркетинг под KPI</span>
+            <span className="hero-gradient-text">Performance маркетинг под KPI</span>
           </h1>
           <p className="mt-5 max-w-2xl text-zinc-600 text-base sm:text-lg">
-            Запускаем и масштабируем платный трафик под окупаемость и LTV. Креативы, закупка, аналитика и автоматизация.
+            Похуй на баны! Запускаем и масштабируем платный трафик под окупаемость и LTV. Креативы, закупка, аналитика и автоматизация.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
             <MagneticButton
