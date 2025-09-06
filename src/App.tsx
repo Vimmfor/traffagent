@@ -115,7 +115,7 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={onQuiz} className="group hidden sm:inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-3 py-2 text-sm font-semibold text-white shadow hover:shadow-lg transition-shadow">
-            Запустить траф <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            Запустить трафик <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </button>
           <button type="button" onClick={() => setOpen(v=>!v)} aria-label="Открыть меню" className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10">{open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
         </div>
@@ -128,7 +128,7 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
             <a href="#cases" className="py-3">Кейсы</a>
             <a href="#pricing" className="py-3">Тарифы</a>
             <a href="#faq" className="py-3">FAQ</a>
-            <button type="button" onClick={() => { setOpen(false); onQuiz(); }} className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white">Запустить траф</button>
+            <button type="button" onClick={() => { setOpen(false); onQuiz(); }} className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white">Запустить трафик</button>
           </div>
         </div>
       )}
@@ -299,7 +299,7 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
               onClick={onQuiz}
               className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-6 py-4 text-base sm:text-sm font-semibold text-white shadow-xl hover:shadow-2xl"
             >
-              Запустить траф <ArrowRight className="ml-2 h-5 w-5" />
+              Запустить трафик <ArrowRight className="ml-2 h-5 w-5" />
             </MagneticButton>
             <MagneticButton
               href="https://t.me/traffagent"
@@ -405,7 +405,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
               onClick={onQuiz}
               className="mt-auto inline-flex items-center justify-center rounded-xl bg-white text-black px-4 py-2 text-sm font-medium w-full hover:bg-zinc-100 transition-colors"
             >
-              Запустить траф
+              Запустить трафик
             </button>
           </li>
         ))}
