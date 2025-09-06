@@ -405,7 +405,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
               onClick={onQuiz}
               className="mt-auto inline-flex items-center justify-center rounded-xl bg-white text-black px-4 py-2 text-sm font-medium w-full hover:bg-zinc-100 transition-colors"
             >
-              Запустить трафик
+              Консультация
             </button>
           </li>
         ))}
