@@ -14,6 +14,54 @@ const CHAT_ID   = (typeof window !== "undefined" && window.__TG_CHAT__)  || TG_C
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 
+/* ===== SparklesFX — лёгкие «искорки» на canvas ===== */
+function SparklesFX({ count = 60 }: { count?: number }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  const prefersReduced = useReducedMotion();
+
+  useEffect(() => {
+    if (prefersReduced) return;
+    const canvas = ref.current!;
+    const ctx = canvas.getContext("2d")!;
+    let w = (canvas.width = canvas.offsetWidth);
+    let h = (canvas.height = canvas.offsetHeight);
+    const onResize = () => { w = canvas.width = canvas.offsetWidth; h = canvas.height = canvas.offsetHeight; };
+    const particles = Array.from({ length: count }).map(() => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: 0.6 + Math.random() * 1.6,
+      a: 0.3 + Math.random() * 0.6,
+      vx: (Math.random() - 0.5) * 0.2,
+      vy: (Math.random() - 0.5) * 0.2,
+    }));
+
+    let raf = 0;
+    const loop = () => {
+      ctx.clearRect(0, 0, w, h);
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+        if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 6);
+        grad.addColorStop(0, `rgba(255,255,255,${p.a})`);
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 6, 0, Math.PI * 2); ctx.fill();
+      });
+      raf = requestAnimationFrame(loop);
+    };
+    const ro = new ResizeObserver(onResize); ro.observe(canvas);
+    loop();
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+  }, [count, prefersReduced]);
+
+  return (
+    <div className="absolute inset-0 pointer-events-none">
+      <canvas ref={ref} className="w-full h-full" />
+    </div>
+  );
+}
+
 /* ===== утилиты ===== */
 function Section({ id, children, className = "", bg = "" }: { id?: string; children: React.ReactNode; className?: string; bg?: string }) {
   return <section id={id} className={`${bg} relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 ${className}`}>{children}</section>;
@@ -95,18 +143,14 @@ function MagneticCursor() {
     const el = ref.current!;
     const onMove = (e: MouseEvent) => { mouse.current.x = e.clientX; mouse.current.y = e.clientY; };
     const tick = () => {
-      // если есть магнит — тянемся к центру таргета
       let tx = mouse.current.x, ty = mouse.current.y, s = 1;
       if (target.current) {
         const r = target.current.getBoundingClientRect();
-        tx = r.left + r.width / 2;
-        ty = r.top + r.height / 2;
-        s = 1.6;
+        tx = r.left + r.width / 2; ty = r.top + r.height / 2; s = 1.6;
       }
       pos.current.x += (tx - pos.current.x) * 0.18;
       pos.current.y += (ty - pos.current.y) * 0.18;
       scale.current += (s - scale.current) * 0.18;
-
       el.style.transform = `translate3d(${pos.current.x - 12}px, ${pos.current.y - 12}px, 0) scale(${scale.current})`;
       raf.current = requestAnimationFrame(tick);
     };
@@ -170,7 +214,7 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
           <a href="#inside" className="hover:text-zinc-100" data-cursor="magnet">Внутри</a>
           <a href="#cases" className="hover:text-zinc-100" data-cursor="magnet">Кейсы</a>
           <a href="#pricing" className="hover:text-zinc-100" data-cursor="magnet">Тарифы</a>
-          <a href="#faq" className="hover:text-зinc-100" data-cursor="magnet">FAQ</a>
+          <a href="#faq" className="hover:text-zinc-100" data-cursor="magnet">FAQ</a>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -280,9 +324,7 @@ function MagneticButton({
 /* ===== HERO ===== */
 function Hero({ onQuiz }: { onQuiz: () => void }) {
   const prefersReduced = useReducedMotion();
-  // чипы/прочие элементы — старые подписи
   const sources = ["Meta (Facebook + Instagram + Threads)","YouTube","TikTok","Google Ads","Telegram","Twitter / X","LinkedIn Ads","Reddit Ads","Snapchat Ads"];
-  // ТОЛЬКО для бегущей строки — новый текст
   const marqueeItems = [
     "Финтех, порнуха, чернуха, вейпы — мы не боимся запретов. Здесь реклама живёт дольше любого модератора."
   ];
@@ -372,7 +414,7 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
           </motion.div>
         </div>
 
-        {/* только здесь — новый текст */}
+        {/* только здесь — новый текст для бегущей строки */}
         <div className="lg:col-span-12">
           <ContinuousMarquee items={marqueeItems} speed={55} gap={72} />
         </div>
@@ -397,14 +439,13 @@ function TiltCard() {
       <div className="mt-4 grid grid-cols-3 gap-2 text-[11px]">
         <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center"><div className="text-zinc-900 font-semibold">3.7x</div><div className="text-zinc-500 mt-0.5">ROAS avg</div></div>
         <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center"><div className="text-zinc-900 font-semibold">120k+</div><div className="text-zinc-500 mt-0.5">лидов/год</div></div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center"><div className="text-зinc-900 font-semibold">18</div><div className="text-зinc-500 mt-0.5">источников</div></div>
+        <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center"><div className="text-zinc-900 font-semibold">18</div><div className="text-zinc-500 mt-0.5">источников</div></div>
       </div>
     </>
   );
 }
 
-/* ===== блоки ниже без изменений логики, добавлены data-cursor="magnet" на ключевые кнопки ===== */
-
+/* ===== Services ===== */
 function Services({ onQuiz }: { onQuiz: () => void }) {
   const groups = [
     { title: "Медиабаинг + Комплаенс", desc: "Meta, Google, TikTok, альтернативы. Anti-ban, прогрев, резервы.", bullets: ["Гипотезы и тесты", "Масштабирование", "Кейсы по вайт/грей"] },
@@ -437,6 +478,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
+/* ===== Inside ===== */
 function Inside() {
   const steps: [string, string][] = [
     ["Discovery","Погружаемся в продукт, аудиторию и цели. KPI и рамки."],
@@ -461,6 +503,7 @@ function Inside() {
   );
 }
 
+/* ===== Cases ===== */
 function Cases() {
   const list: [string, string, string][] = [
     ["FinTech SaaS","+212% MRR","Google + LinkedIn + контент"],
@@ -486,6 +529,7 @@ function Cases() {
   );
 }
 
+/* ===== Pricing ===== */
 function Pricing({ onQuiz }: { onQuiz: () => void }) {
   const plans = [
     { name: "Старт", price: "от $1k", desc: "Для тестов и первых продаж", features: ["Стратегия", "3-5 подходов", "1-2 канала", "Еженед. отчет"], highlight: false },
@@ -516,6 +560,7 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
+/* ===== FAQ ===== */
 function FAQ() {
   const qa: [string, string][] = [
     ["С какими вертикалями работаете?","E-com, edtech, подписки, mobile, SaaS, финтех."],
@@ -538,6 +583,7 @@ function FAQ() {
   );
 }
 
+/* ===== Footer ===== */
 function Footer() {
   return (
     <footer className="border-t border-white/5 py-8 bg-zinc-950 text-zinc-400">
@@ -598,9 +644,9 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="relative z-[101] w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl bg-white text-zinc-900 shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-зinc-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200">
           <div className="text-sm font-semibold">Мини-квиз</div>
-          <button type="button" onClick={onClose} className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-зinc-200" aria-label="Закрыть">×</button>
+          <button type="button" onClick={onClose} className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-zinc-200" aria-label="Закрыть">×</button>
         </div>
         <div>
           {step < questions.length && (
@@ -608,7 +654,7 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
               <div className="text-sm font-medium">{questions[step].text}</div>
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                 {questions[step].options.map((opt) => (
-                  <button type="button" key={opt} onClick={() => choose(opt)} className="w-full rounded-xl border border-зinc-300 px-4 py-3 text-left active:scale-[.99]">{opt}</button>
+                  <button type="button" key={opt} onClick={() => choose(opt)} className="w-full rounded-xl border border-zinc-300 px-4 py-3 text-left active:scale-[.99]">{opt}</button>
                 ))}
               </div>
             </div>
@@ -616,18 +662,18 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
           {step === questions.length && (
             <div className="px-5 py-5 space-y-4">
               <div className="text-sm font-medium">Готово! Мы открыли Telegram.</div>
-              <p className="text-sm text-зinc-600">Если Telegram не открылся — нажмите кнопку ниже. Текст с ответами можно скопировать вручную.</p>
-              <textarea ref={textRef} value={summaryText} readOnly className="w-full rounded-xl border border-зinc-300 px-3 py-3 text-sm text-зinc-700" />
+              <p className="text-sm text-zinc-600">Если Telegram не открылся — нажмите кнопку ниже. Текст с ответами можно скопировать вручную.</p>
+              <textarea ref={textRef} value={summaryText} readOnly className="w-full rounded-xl border border-zinc-300 px-3 py-3 text-sm text-zinc-700" />
               <div className="flex flex-col sm:flex-row gap-2">
-                <a href={tgLink} target="_blank" rel="noreferrer noopener" className="inline-flex items-center justify-center rounded-xl bg-зinc-900 text-white px-4 py-2 text-sm font-semibold w-full sm:w-auto">Перейти в Telegram</a>
+                <a href={tgLink} target="_blank" rel="noreferrer noopener" className="inline-flex items-center justify-center rounded-xl bg-zinc-900 text-white px-4 py-2 text-sm font-semibold w-full sm:w-auto">Перейти в Telegram</a>
               </div>
             </div>
           )}
         </div>
         <div className="px-5 pb-5 pt-2 flex items-center justify-between">
-          <div className="text-xs text-зinc-500">Шаг {Math.min(step + 1, questions.length)} из {questions.length}</div>
+          <div className="text-xs text-zinc-500">Шаг {Math.min(step + 1, questions.length)} из {questions.length}</div>
           {step > 0 && step <= questions.length - 1 && (
-            <button type="button" onClick={() => setStep(step - 1)} className="rounded-lg border border-зinc-300 px-4 py-2 text-sm">Назад</button>
+            <button type="button" onClick={() => setStep(step - 1)} className="rounded-lg border border-zinc-300 px-4 py-2 text-sm">Назад</button>
           )}
         </div>
       </div>
@@ -643,7 +689,7 @@ function TraffAgentLanding() {
     Object.entries(defs).forEach(([name, ref]) => console.assert(typeof ref === "function", `${name} should be defined`));
   }, []);
   return (
-    <div className="min-h-screen bg-gradient-to-b from-зinc-950 via-зinc-950 to-зinc-900 text-зinc-200">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900 text-zinc-200">
       <MagneticCursor />
       <Header onQuiz={() => setQuizOpen(true)} />
       <main>
