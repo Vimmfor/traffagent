@@ -3,14 +3,15 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check, Menu, Sparkles, X } from "lucide-react";
 
 /**
- * Полный App.tsx (готов к сборке Vite + TS)
- * - Новый WOW-Hero: 3D tilt, магнитные кнопки, живой градиент заголовка, расширенный marquee
- * - Кнопки в «Услуги» и «Тарифы» выровнены по низу карточек
- * - Квиз без ввода (варианты), переход в Telegram на финале
- * - Плавные якоря для меню
+ * App.tsx — усиленная версия
+ * - WOW-Hero: кинетический фон (сетка+переливы+шум), 3D параллакс, shine у заголовка, плавающие чипсы
+ * - Магнитные CTA, плавные микроанимации списка
+ * - Выравнивание кнопок по низу карточек
+ * - Квиз с вариантами и открытием Telegram
+ * - Якоря + плавный скролл
  */
 
-// ===== опциональные интеграции (оставь пустым или заполни позже) =====
+// ===== интеграции (заполнятся позже) =====
 const LEAD_WEBHOOK = "";
 const TG_BOT_TOKEN = "";
 const TG_CHAT_ID = "";
@@ -33,7 +34,7 @@ function H2({ children, className = "" }: { children: React.ReactNode; className
   return <h2 className={`mt-2 text-[22px] sm:text-2xl md:text-4xl font-semibold leading-tight tracking-tight ${className}`}>{children}</h2>;
 }
 
-// ===== бегущая строка (крупная и выразительная) =====
+// ===== бегущая строка =====
 function ContinuousMarquee({ items, speed = 55, gap = 72 }: { items: string[]; speed?: number; gap?: number }) {
   const stripRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(0);
@@ -109,13 +110,13 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
         <div className="hidden md:flex items-center gap-6 text-sm text-zinc-400">
           <a href="#services" className="hover:text-zinc-100">Услуги</a>
           <a href="#inside" className="hover:text-zinc-100">Внутри</a>
-          <a href="#cases" className="hover:text-zinc-100">Кейсы</a>
+          <a href="#cases" className="hover:text-зinc-100">Кейсы</a>
           <a href="#pricing" className="hover:text-zinc-100">Тарифы</a>
           <a href="#faq" className="hover:text-zinc-100">FAQ</a>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={onQuiz} className="group hidden sm:inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-3 py-2 text-sm font-semibold text-white shadow hover:shadow-lg transition-shadow">
-            Запустить трафик <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          <button type="button" onClick={onQuiz} className="group hidden sm:inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-3 py-2 text-sm font-semibold text-white shadow hover:shadow-lg transition-transform hover:scale-[1.02]">
+            Запустить траф <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </button>
           <button type="button" onClick={() => setOpen(v=>!v)} aria-label="Открыть меню" className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10">{open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
         </div>
@@ -128,7 +129,7 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
             <a href="#cases" className="py-3">Кейсы</a>
             <a href="#pricing" className="py-3">Тарифы</a>
             <a href="#faq" className="py-3">FAQ</a>
-            <button type="button" onClick={() => { setOpen(false); onQuiz(); }} className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white">Консультация</button>
+            <button type="button" onClick={() => { setOpen(false); onQuiz(); }} className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white">Запустить траф</button>
           </div>
         </div>
       )}
@@ -244,9 +245,29 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
   ];
   const tilt = useMouseTilt(8);
 
+  // фоновая сетка + шум
+  const gridSvg = encodeURIComponent(`
+    <svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'>
+      <path d='M32 0H0v32' fill='none' stroke='rgba(24,24,27,.08)'/>
+    </svg>
+  `);
+  const noisePng =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4/58BCgAHxgK1l9a4VQAAAABJRU5ErkJggg==";
+
   return (
     <Section id="home" className="relative overflow-hidden pt-16 pb-20 sm:pt-20 sm:pb-24" bg="bg-white text-zinc-900">
-      {/* динамичные орбы/свет */}
+      {/* подложка: сетка + шум */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,${gridSvg}"), url(${noisePng})`,
+          backgroundSize: "32px 32px, auto",
+          backgroundBlendMode: "normal, soft-light",
+          opacity: 0.9,
+        }}
+      />
+      {/* переливы */}
       {!prefersReduced && (
         <>
           <motion.div
@@ -268,9 +289,10 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
         </>
       )}
 
-      {/* анимация градиентного текста */}
+      {/* shine эффект и градиент у заголовка */}
       <style>{`
         .hero-gradient-text{
+          position: relative;
           background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899, #22c55e, #06b6d4);
           background-size: 200% 200%;
           -webkit-background-clip: text;
@@ -278,10 +300,35 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
           color: transparent;
           animation: heroGradient 7s ease-in-out infinite;
         }
+        .hero-gradient-text::after{
+          content:"";
+          position:absolute;
+          inset:0;
+          background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.6) 15%, transparent 30%);
+          transform: translateX(-200%);
+          will-change: transform;
+          pointer-events:none;
+          border-radius:.5rem;
+        }
+        .hero-gradient-text:hover::after{
+          animation: shine 1.4s ease-out 1;
+        }
         @keyframes heroGradient {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
+        }
+        @keyframes shine{
+          0%{ transform:translateX(-200%); }
+          100%{ transform:translateX(200%); }
+        }
+        .float-chip{
+          animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float{
+          0%{ transform: translateY(0px); }
+          50%{ transform: translateY(-8px); }
+          100%{ transform: translateY(0px); }
         }
       `}</style>
 
@@ -292,53 +339,72 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
             <span className="hero-gradient-text">Performance трафик под KPI</span>
           </h1>
           <p className="mt-5 max-w-2xl text-zinc-600 text-base sm:text-lg">
-            Похуй на баны! Запускаем и масштабируем платный трафик под окупаемость и LTV. Креативы, закупка, аналитика и автоматизация.
+            Запускаем и масштабируем платный трафик под окупаемость и LTV. Креативы, закупка, аналитика и автоматизация.
           </p>
+
+          {/* плавающие чипсы */}
+          <div className="mt-6 flex flex-wrap gap-2">
+            {["Meta", "YouTube", "TikTok", "Google", "Telegram", "Twitter / X"].map((t, i) => (
+              <span key={t} className="float-chip inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white/80 px-3 py-1.5 text-xs text-zinc-700 shadow-sm"
+                style={{ animationDelay: `${i * 0.2}s` }}>
+                <span className="inline-block h-2 w-2 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500" />
+                {t}
+              </span>
+            ))}
+          </div>
+
+          {/* CTA: магнитные кнопки */}
           <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
             <MagneticButton
               onClick={onQuiz}
-              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-6 py-4 text-base sm:text-sm font-semibold text-white shadow-xl hover:shadow-2xl"
+              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-6 py-4 text-base sm:text-sm font-semibold text-white shadow-xl hover:shadow-2xl hover:scale-[1.02]"
             >
-              Запустить трафик <ArrowRight className="ml-2 h-5 w-5" />
+              Запустить траф <ArrowRight className="ml-2 h-5 w-5" />
             </MagneticButton>
             <MagneticButton
               href="https://t.me/traffagent"
               target="_blank"
               rel="noreferrer noopener"
-              className="inline-flex items-center justify-center rounded-2xl border border-zinc-300 bg-white px-6 py-4 text-base sm:text-sm font-semibold hover:bg-zinc-100"
+              className="inline-flex items-center justify-center rounded-2xl border border-zinc-300 bg-white px-6 py-4 text-base sm:text-sm font-semibold hover:bg-zinc-100 hover:scale-[1.01]"
             >
               Похуй, делаем!
             </MagneticButton>
           </div>
+
+          {/* scroll-hint */}
+          <div className="mt-8 hidden sm:flex items-center gap-2 text-xs text-zinc-500">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-zinc-300" />
+            Листайте вниз — там кейсы и тарифы
+          </div>
         </motion.div>
 
-        {/* 3D-карточка с ценностью */}
+        {/* 3D-карточка (параллакс) */}
         <div className="lg:col-span-5">
           <motion.div
             ref={tilt.ref}
             style={tilt.style}
-            className="relative rounded-3xl border border-zinc-200/70 bg-white/70 backdrop-blur-xl p-5 shadow-[0_30px_60px_-15px_rgba(0,0,0,.15)]"
+            className="relative rounded-3xl border border-zinc-200/70 bg-white/75 backdrop-blur-xl p-5 shadow-[0_30px_60px_-15px_rgba(0,0,0,.15)] will-change-transform"
           >
             <div className="flex items-center justify-between">
               <div className="text-sm font-medium text-zinc-700">Спринт: 14 дней</div>
               <span className="text-xs rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700 border border-emerald-200">KPI-driven</span>
             </div>
             <ul className="mt-3 space-y-2 text-sm text-zinc-600">
-              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-500" /> 6–12 креативов / итерация</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-500" /> 6–12 креативов на итерацию</li>
               <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-500" /> мультиканальный баинг</li>
               <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-500" /> автоматизация и правила</li>
               <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-500" /> сквозная аналитика</li>
             </ul>
             <div className="mt-4 grid grid-cols-3 gap-2 text-[11px]">
-              <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center">
+              <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center hover:shadow-sm transition-shadow">
                 <div className="text-zinc-900 font-semibold">3.7x</div>
                 <div className="text-zinc-500 mt-0.5">ROAS avg</div>
               </div>
-              <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center">
+              <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center hover:shadow-sm transition-shadow">
                 <div className="text-zinc-900 font-semibold">120k+</div>
                 <div className="text-zinc-500 mt-0.5">лидов/год</div>
               </div>
-              <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center">
+              <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center hover:shadow-sm transition-shadow">
                 <div className="text-zinc-900 font-semibold">18</div>
                 <div className="text-zinc-500 mt-0.5">источников</div>
               </div>
@@ -367,7 +433,7 @@ function Metrics() {
     <Section id="metrics" className="py-12" bg="bg-white text-zinc-900">
       <ul className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {stats.map(([v, l], i) => (
-          <li key={i} className="card rounded-2xl border border-zinc-200 p-5 text-center bg-white/70 backdrop-blur">
+          <li key={i} className="card rounded-2xl border border-zinc-200 p-5 text-center bg-white/70 backdrop-blur hover:shadow-sm transition-shadow">
             <div className="text-2xl md:text-3xl font-semibold">{v}</div>
             <div className="text-xs text-zinc-500 mt-1">{l}</div>
           </li>
@@ -391,8 +457,8 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
       <H2>Услуги</H2>
       <ul className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm items-stretch">
         {groups.map((g, i) => (
-          <li key={i} className="card h-full flex flex-col rounded-2xl border border-white/10 p-4 bg-gradient-to-b from-white/5 to-transparent">
-            <div className="h-1 w-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 mb-3" />
+          <li key={i} className="group card h-full flex flex-col rounded-2xl border border-white/10 p-4 bg-gradient-to-b from-white/5 to-transparent transition-all hover:-translate-y-0.5 hover:border-white/20">
+            <div className="h-1 w-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 mb-3 opacity-90 group-hover:opacity-100" />
             <div className="flex-1">
               <div className="font-medium text-base sm:text-[15px]">{g.title}</div>
               <p className="mt-1 text-zinc-400">{g.desc}</p>
@@ -405,7 +471,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
               onClick={onQuiz}
               className="mt-auto inline-flex items-center justify-center rounded-xl bg-white text-black px-4 py-2 text-sm font-medium w-full hover:bg-zinc-100 transition-colors"
             >
-              Консультация
+              Запустить траф
             </button>
           </li>
         ))}
@@ -429,7 +495,7 @@ function Inside() {
       <H2>Внутри TraffAgent</H2>
       <ol className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
         {steps.map(([t, d], i) => (
-          <li key={i} className="card rounded-2xl border border-zinc-200 p-4 bg-white/80 backdrop-blur">
+          <li key={i} className="card rounded-2xl border border-zinc-200 p-4 bg-white/80 backdrop-blur hover:shadow-sm transition-shadow">
             <div className="text-sm sm:text-[15px] font-medium">{String(i + 1).padStart(2, "0")}. {t}</div>
             <p className="mt-1 text-sm text-zinc-600">{d}</p>
           </li>
@@ -452,7 +518,7 @@ function Cases() {
       <H2>Кейсы</H2>
       <ul className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         {list.map(([name, res, desc], i) => (
-          <li key={i} className="card rounded-2xl border border-white/10 p-4 glass">
+          <li key={i} className="card rounded-2xl border border-white/10 p-4 glass hover:-translate-y-0.5 hover:border-white/20 transition-all">
             <div className="flex items-baseline justify-between">
               <h3 className="font-medium">{name}</h3>
               <span className="text-xs font-semibold bg-gradient-to-r from-emerald-400 to-teal-400 text-black rounded-full px-2 py-0.5">{res}</span>
@@ -478,7 +544,7 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
       <H2 className="text-black">Тарифы</H2>
       <ul className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
         {plans.map((p, i) => (
-          <li key={i} className={`card h-full flex flex-col rounded-2xl border p-5 bg-white/80 backdrop-blur ${p.highlight ? "border-zinc-300" : "border-zinc-200"}`}>
+          <li key={i} className={`group card h-full flex flex-col rounded-2xl border p-5 bg-white/80 backdrop-blur ${p.highlight ? "border-zinc-300" : "border-zinc-200"} transition-all hover:-translate-y-0.5 hover:shadow-md`}>
             {p.highlight && (<span className="mb-3 inline-block rounded-full border border-zinc-300 px-2 py-0.5 text-xs bg-gradient-to-r from-indigo-100 to-fuchsia-100">Популярный</span>)}
             <div className="text-lg font-semibold">{p.name}</div>
             <div className="mt-1 text-2xl font-bold">{p.price}</div>
@@ -489,7 +555,7 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
             <button
               type="button"
               onClick={onQuiz}
-              className="mt-auto inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 text-sm font-medium text-white w-full shadow-lg hover:shadow-xl transition-shadow"
+              className="mt-auto inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 text-sm font-medium text-white w-full shadow-lg hover:shadow-xl transition-transform hover:scale-[1.02]"
             >
               Берем
             </button>
@@ -504,7 +570,7 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
 function FAQ() {
   const qa: [string, string][] = [
     ["С какими вертикалями работаете?","E-com, edtech, подписки, mobile, SaaS, финтех."],
-    ["Когда ждать результат?","Первые инсайты за 7-14 дней спринта, масштаб 1-2 месяца."],
+    ["Когда ждать результат?","Первые инсайты через 7–14 дней спринта, масштаб 1–2 месяца."],
     ["Как считаете атрибуцию?","Серверный трекинг, событийная модель, сводка в BI."]
   ];
   return (
@@ -613,10 +679,10 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
           </div>
         </div>
         <div className="px-5 pb-5 pt-2 flex items-center justify-between">
-          <div className="text-xs text-zinc-500">Шаг {Math.min(step + 1, questions.length)} из {questions.length}</div>
+          <div className="text-xs text-зinc-500">Шаг {Math.min(step + 1, questions.length)} из {questions.length}</div>
           <div className="flex gap-2">
             {step > 0 && step <= questions.length - 1 && (
-              <button type="button" onClick={() => setStep(step - 1)} className="rounded-lg border border-zinc-300 px-4 py-2 text-sm">Назад</button>
+              <button type="button" onClick={() => setStep(step - 1)} className="rounded-lg border border-зinc-300 px-4 py-2 text-sm">Назад</button>
             )}
           </div>
         </div>
