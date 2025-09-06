@@ -3,13 +3,10 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check, Menu, Sparkles, X } from "lucide-react";
 
 /**
- * TraffAgent — App.tsx
- * - WOW-Hero: градиентный заголовок, параллакс-орбы, искры (canvas), магнитные кнопки, бэйджи источников
- * - Яркая бегущая строка (chips + подсветка, пауза при наведении)
- * - Услуги/Тарифы: CTA на одном уровне
- * - Мини-квиз без ввода + переход в Telegram
- * - Плавные якоря в шапке
- * - Тёмный магнитный курсор
+ * TraffAgent — App.tsx (light)
+ * - Убран магнитный курсор (минус постоянный RAF)
+ * - Маркиза и искры останавливаются вне вьюпорта и в скрытой вкладке
+ * - Остальные анимации и UI без изменений
  */
 
 /* ===== интеграции (опционально) ===== */
@@ -34,21 +31,53 @@ const container = {
 };
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 
-/* ===== SparklesFX — лёгкие «искорки» на canvas ===== */
+/* ===== SparklesFX — лёгкие «искорки» на canvas (с авто-паузой) ===== */
 function SparklesFX({ count = 60 }: { count?: number }) {
-  const ref = useRef<HTMLCanvasElement | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const prefersReduced = useReducedMotion();
+  const [active, setActive] = useState(true); // управляем рендером
 
   useEffect(() => {
     if (prefersReduced) return;
-    const canvas = ref.current!;
+
+    // Пауза при скрытой вкладке
+    const onVis = () => setActive(!document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+
+    // Пауза, если секция вне экрана
+    let io: IntersectionObserver | null = null;
+    if ("IntersectionObserver" in window && wrapRef.current) {
+      io = new IntersectionObserver(
+        (ents) => {
+          const e = ents[0];
+          setActive(e.isIntersecting && !document.hidden);
+        },
+        { rootMargin: "0px 0px 0px 0px", threshold: 0 }
+      );
+      io.observe(wrapRef.current);
+    }
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      io?.disconnect();
+    };
+  }, [prefersReduced]);
+
+  useEffect(() => {
+    if (prefersReduced) return;
+    const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
     let w = (canvas.width = canvas.offsetWidth);
     let h = (canvas.height = canvas.offsetHeight);
+
     const onResize = () => {
       w = canvas.width = canvas.offsetWidth;
       h = canvas.height = canvas.offsetHeight;
     };
+    const ro = new ResizeObserver(onResize);
+    ro.observe(canvas);
+
     const particles = Array.from({ length: count }).map(() => ({
       x: Math.random() * w,
       y: Math.random() * h,
@@ -60,6 +89,10 @@ function SparklesFX({ count = 60 }: { count?: number }) {
 
     let raf = 0;
     const loop = () => {
+      if (!active) {
+        raf = requestAnimationFrame(loop);
+        return;
+      }
       ctx.clearRect(0, 0, w, h);
       particles.forEach((p) => {
         p.x += p.vx;
@@ -78,18 +111,17 @@ function SparklesFX({ count = 60 }: { count?: number }) {
       });
       raf = requestAnimationFrame(loop);
     };
-    const ro = new ResizeObserver(onResize);
-    ro.observe(canvas);
-    loop();
+    raf = requestAnimationFrame(loop);
+
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [count, prefersReduced]);
+  }, [count, prefersReduced, active]);
 
   return (
-    <div className="absolute inset-0 pointer-events-none">
-      <canvas ref={ref} className="w-full h-full" />
+    <div ref={wrapRef} className="absolute inset-0 pointer-events-none">
+      <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   );
 }
@@ -146,7 +178,7 @@ function H2({
   );
 }
 
-/* ===== бегущая строка (ярче, с подсветкой, пауза при ховере) ===== */
+/* ===== бегущая строка (яркая) — с авто-паузой вне вьюпорта/вкладки ===== */
 function ContinuousMarquee({
   items,
   speed = 65,
@@ -156,12 +188,15 @@ function ContinuousMarquee({
   speed?: number;
   gap?: number;
 }) {
+  const hostRef = useRef<HTMLDivElement | null>(null);
   const stripRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(0);
   const [width, setWidth] = useState(0);
   const prefersReduced = useReducedMotion();
   const [paused, setPaused] = useState(false);
+  const [inView, setInView] = useState(true);
 
+  // наблюдаем ширину
   useEffect(() => {
     const recalc = () => {
       if (stripRef.current)
@@ -174,13 +209,38 @@ function ContinuousMarquee({
       ro = new RO(recalc);
       ro.observe(stripRef.current);
     }
-    window.addEventListener("resize", recalc);
+    const r = () => recalc();
+    window.addEventListener("resize", r);
     return () => {
       if (ro && stripRef.current) ro.disconnect();
-      window.removeEventListener("resize", recalc);
+      window.removeEventListener("resize", r);
     };
   }, []);
 
+  // авто-пауза при скрытой вкладке / вне экрана
+  useEffect(() => {
+    const vis = () => setPaused(document.hidden || !inView);
+    document.addEventListener("visibilitychange", vis);
+    return () => document.removeEventListener("visibilitychange", vis);
+  }, [inView]);
+
+  useEffect(() => {
+    let io: IntersectionObserver | null = null;
+    if ("IntersectionObserver" in window && hostRef.current) {
+      io = new IntersectionObserver(
+        (ents) => {
+          const e = ents[0];
+          setInView(e.isIntersecting);
+          setPaused(document.hidden || !e.isIntersecting);
+        },
+        { rootMargin: "0px", threshold: 0 }
+      );
+      io.observe(hostRef.current);
+    }
+    return () => io?.disconnect();
+  }, []);
+
+  // анимация
   useEffect(() => {
     if (prefersReduced) return;
     let raf = 0;
@@ -188,8 +248,9 @@ function ContinuousMarquee({
     const tick = (now: number) => {
       const dt = now - prev;
       prev = now;
-      if (!paused)
+      if (!paused) {
         setOffset((o) => (width <= 0 ? 0 : (o + (speed * dt) / 1000) % width));
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -230,9 +291,10 @@ function ContinuousMarquee({
 
   return (
     <div
+      ref={hostRef}
       className="relative overflow-hidden"
       onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseLeave={() => setPaused(document.hidden || !inView)}
     >
       {/* светящаяся подложка */}
       <div
@@ -285,86 +347,6 @@ function ContinuousMarquee({
   );
 }
 
-/* ===== Тёмный магнитный курсор ===== */
-function MagneticCursor() {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const mouse = useRef({ x: 0, y: 0 });
-  const pos = useRef({ x: 0, y: 0 });
-  const scale = useRef(1);
-  const target = useRef<HTMLElement | null>(null);
-  const raf = useRef<number>(0);
-
-  useEffect(() => {
-    const el = ref.current!;
-    const onMove = (e: MouseEvent) => {
-      mouse.current.x = e.clientX;
-      mouse.current.y = e.clientY;
-    };
-    const tick = () => {
-      let tx = mouse.current.x,
-        ty = mouse.current.y,
-        s = 1;
-      if (target.current) {
-        const r = target.current.getBoundingClientRect();
-        tx = r.left + r.width / 2;
-        ty = r.top + r.height / 2;
-        s = 1.6;
-      }
-      pos.current.x += (tx - pos.current.x) * 0.18;
-      pos.current.y += (ty - pos.current.y) * 0.18;
-      scale.current += (s - scale.current) * 0.18;
-      el.style.transform = `translate3d(${pos.current.x - 12}px, ${
-        pos.current.y - 12
-      }px, 0) scale(${scale.current})`;
-      raf.current = requestAnimationFrame(tick);
-    };
-
-    const enterMagnet = (e: Event) => {
-      target.current = e.currentTarget as HTMLElement;
-    };
-    const leaveMagnet = () => {
-      target.current = null;
-    };
-
-    window.addEventListener("mousemove", onMove, { passive: true });
-    document.querySelectorAll<HTMLElement>('[data-cursor="magnet"]').forEach(
-      (n) => {
-        n.addEventListener("mouseenter", enterMagnet);
-        n.addEventListener("mouseleave", leaveMagnet);
-      }
-    );
-
-    raf.current = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(raf.current);
-      window.removeEventListener("mousemove", onMove);
-      document
-        .querySelectorAll<HTMLElement>('[data-cursor="magnet"]')
-        .forEach((n) => {
-          n.removeEventListener("mouseenter", enterMagnet);
-          n.removeEventListener("mouseleave", leaveMagnet);
-        });
-    };
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      aria-hidden
-      className="fixed left-0 top-0 z-[200] h-6 w-6 rounded-full"
-      style={{
-        pointerEvents: "none",
-        background: "rgba(255,255,255,0.08)",
-        border: "1px solid rgba(255,255,255,0.35)",
-        mixBlendMode: "difference",
-        backdropFilter: "blur(2px)",
-        transform: "translate3d(-9999px,-9999px,0)",
-        transition: "background 200ms, border 200ms",
-      }}
-    />
-  );
-}
-
 /* ===== Header ===== */
 function Header({ onQuiz }: { onQuiz: () => void }) {
   const [open, setOpen] = useState(false);
@@ -388,8 +370,8 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
       }
     };
     const nav = document.getElementById("main-nav");
-    if (nav) nav.addEventListener("click", handler);
-    return () => nav && nav.removeEventListener("click", handler);
+    if (nav) nav.addEventListener("click", handler, { passive: false } as any);
+    return () => nav && nav.removeEventListener("click", handler as any);
   }, []);
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-zinc-950/70 backdrop-blur">
@@ -401,30 +383,19 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
           TraffAgent
         </a>
         <div className="hidden md:flex items-center gap-6 text-sm text-zinc-400">
-          <a href="#services" className="hover:text-zinc-100" data-cursor="magnet">
-            Услуги
-          </a>
-          <a href="#inside" className="hover:text-zinc-100" data-cursor="magnet">
-            Внутри
-          </a>
-          <a href="#cases" className="hover:text-zinc-100" data-cursor="magnet">
-            Кейсы
-          </a>
-          <a href="#pricing" className="hover:text-zinc-100" data-cursor="magnet">
-            Тарифы
-          </a>
-          <a href="#faq" className="hover:text-zinc-100" data-cursor="magnet">
-            FAQ
-          </a>
+          <a href="#services" className="hover:text-zinc-100">Услуги</a>
+          <a href="#inside" className="hover:text-zinc-100">Внутри</a>
+          <a href="#cases" className="hover:text-zinc-100">Кейсы</a>
+          <a href="#pricing" className="hover:text-zinc-100">Тарифы</a>
+          <a href="#faq" className="hover:text-zinc-100">FAQ</a>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onQuiz}
-            data-cursor="magnet"
             className="group hidden sm:inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-3 py-2 text-sm font-semibold text-white shadow hover:shadow-lg transition-transform hover:scale-[1.02]"
           >
-            Запустить трафик <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            Запустить траф <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </button>
           <button
             type="button"
@@ -439,31 +410,20 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
       {open && (
         <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur">
           <div className="mx-auto max-w-6xl px-4 py-3 grid gap-2 text-base">
-            <a href="#services" className="py-3" data-cursor="magnet">
-              Услуги
-            </a>
-            <a href="#inside" className="py-3" data-cursor="magnet">
-              Внутри
-            </a>
-            <a href="#cases" className="py-3" data-cursor="magnet">
-              Кейсы
-            </a>
-            <a href="#pricing" className="py-3" data-cursor="magnet">
-              Тарифы
-            </a>
-            <a href="#faq" className="py-3" data-cursor="magnet">
-              FAQ
-            </a>
+            <a href="#services" className="py-3">Услуги</a>
+            <a href="#inside" className="py-3">Внутри</a>
+            <a href="#cases" className="py-3">Кейсы</a>
+            <a href="#pricing" className="py-3">Тарифы</a>
+            <a href="#faq" className="py-3">FAQ</a>
             <button
               type="button"
               onClick={() => {
                 setOpen(false);
                 onQuiz();
               }}
-              data-cursor="magnet"
               className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white"
             >
-              Запустить трафик
+              Запустить траф
             </button>
           </div>
         </div>
@@ -505,12 +465,12 @@ function useMouseTilt(strength = 10) {
           "perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0)",
       });
 
-    el.addEventListener("mousemove", handle);
+    el.addEventListener("mousemove", handle, { passive: true });
     el.addEventListener("touchmove", handle, { passive: true });
     el.addEventListener("mouseleave", leave);
     el.addEventListener("touchend", leave);
     return () => {
-      el.removeEventListener("mousemove", handle);
+      el.removeEventListener("mousemove", handle as any);
       el.removeEventListener("touchmove", handle as any);
       el.removeEventListener("mouseleave", leave);
       el.removeEventListener("touchend", leave);
@@ -535,6 +495,7 @@ function MagneticButton({
   target?: string;
   rel?: string;
 }) {
+  // лёгкий «магнит» внутри самой кнопки (без глобального курсора)
   const ref = useRef<HTMLButtonElement | HTMLAnchorElement | null>(null);
   const [t, setT] = useState({ x: 0, y: 0 });
 
@@ -547,7 +508,7 @@ function MagneticButton({
       const r = el.getBoundingClientRect();
       const x = e.clientX - (r.left + r.width / 2);
       const y = e.clientY - (r.top + r.height / 2);
-      setT({ x: x * 0.15, y: y * 0.15 });
+      setT({ x: x * 0.12, y: y * 0.12 });
     };
     const leave = () => setT({ x: 0, y: 0 });
 
@@ -565,7 +526,6 @@ function MagneticButton({
     ref,
     style: { transform: `translate3d(${t.x}px, ${t.y}px, 0)` },
     className: `will-change-transform transition-transform duration-150 ${className}`,
-    "data-cursor": "magnet",
   } as any;
 
   return href ? (
@@ -583,7 +543,6 @@ function MagneticButton({
 function Hero({ onQuiz }: { onQuiz: () => void }) {
   const prefersReduced = useReducedMotion();
   const marqueeItems = [
-    // только здесь меняем текст бегущей строки по твоей просьбе
     "Финтех, порнуха, чернуха, вейпы — мы не боимся запретов. Здесь реклама живёт дольше любого модератора.",
   ];
   const tilt = useMouseTilt(8);
@@ -600,8 +559,8 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
   useEffect(() => {
     if (prefersReduced) return;
     const onScroll = () => setSy(window.scrollY || 0);
-    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, [prefersReduced]);
   const parallaxY = Math.min(sy * 0.08, 80);
@@ -705,8 +664,7 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
               onClick={onQuiz}
               className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-6 py-4 text-base sm:text-sm font-semibold text-white shadow-xl hover:shadow-2xl hover:scale-[1.02]"
             >
-              Запустить трафик
-              <ArrowRight className="ml-2 h-5 w-5" />
+              Запустить траф <ArrowRight className="ml-2 h-5 w-5" />
             </MagneticButton>
             <MagneticButton
               href="https://t.me/traffagent"
@@ -832,10 +790,9 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
             <button
               type="button"
               onClick={onQuiz}
-              data-cursor="magnet"
               className="mt-auto inline-flex items-center justify-center rounded-xl bg-white text-black px-4 py-2 text-sm font-medium w-full hover:bg-zinc-100 transition-colors"
             >
-              Запустить трафик
+              Запустить траф
             </button>
           </li>
         ))}
@@ -970,7 +927,6 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
             <button
               type="button"
               onClick={onQuiz}
-              data-cursor="magnet"
               className="mt-auto inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 text-sm font-medium text-white w-full shadow-lg hover:shadow-xl transition-transform hover:scale-[1.02]"
             >
               Берем
@@ -1179,7 +1135,6 @@ function TraffAgentLanding() {
   }, []);
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900 text-zinc-200">
-      <MagneticCursor />
       <Header onQuiz={() => setQuizOpen(true)} />
       <main>
         <Hero onQuiz={() => setQuizOpen(true)} />
@@ -1195,7 +1150,6 @@ function TraffAgentLanding() {
         <button
           type="button"
           onClick={() => setQuizOpen(true)}
-          data-cursor="magnet"
           className="flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 text-white px-4 py-3 text-base font-semibold shadow-lg shadow-black/30 w-full"
         >
           Берем — обсудить проект
