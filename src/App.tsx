@@ -424,7 +424,7 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
             data-cursor="magnet"
             className="group hidden sm:inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-3 py-2 text-sm font-semibold text-white shadow hover:shadow-lg transition-transform hover:scale-[1.02]"
           >
-            Запустить траф <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            Запустить трафик <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </button>
           <button
             type="button"
@@ -463,7 +463,7 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
               data-cursor="magnet"
               className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white"
             >
-              Запустить траф
+              Запустить трафик
             </button>
           </div>
         </div>
@@ -705,7 +705,8 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
               onClick={onQuiz}
               className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-6 py-4 text-base sm:text-sm font-semibold text-white shadow-xl hover:shadow-2xl hover:scale-[1.02]"
             >
-              Запустить траф <ArrowRight className="ml-2 h-5 w-5" />
+              Запустить трафик
+              <ArrowRight className="ml-2 h-5 w-5" />
             </MagneticButton>
             <MagneticButton
               href="https://t.me/traffagent"
@@ -834,7 +835,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
               data-cursor="magnet"
               className="mt-auto inline-flex items-center justify-center rounded-xl bg-white text-black px-4 py-2 text-sm font-medium w-full hover:bg-zinc-100 transition-colors"
             >
-              Запустить траф
+              Запустить трафик
             </button>
           </li>
         ))}
