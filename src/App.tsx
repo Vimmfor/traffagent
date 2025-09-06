@@ -672,7 +672,7 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
               rel="noreferrer noopener"
               className="inline-flex items-center justify-center rounded-2xl border border-zinc-300 bg-white px-6 py-4 text-base sm:text-sm font-semibold hover:bg-zinc-100 hover:scale-[1.01]"
             >
-              Похуй, делаем!
+              Похуй, Вжух!
             </MagneticButton>
           </div>
 
