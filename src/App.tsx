@@ -128,7 +128,7 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
             <a href="#cases" className="py-3">Кейсы</a>
             <a href="#pricing" className="py-3">Тарифы</a>
             <a href="#faq" className="py-3">FAQ</a>
-            <button type="button" onClick={() => { setOpen(false); onQuiz(); }} className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white">Запустить трафик</button>
+            <button type="button" onClick={() => { setOpen(false); onQuiz(); }} className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white">Консультация</button>
           </div>
         </div>
       )}
