@@ -3,15 +3,13 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check, Menu, Sparkles, X } from "lucide-react";
 
 /**
- * App.tsx — усиленная версия
- * - WOW-Hero: кинетический фон (сетка+переливы+шум), 3D параллакс, shine у заголовка, плавающие чипсы
- * - Магнитные CTA, плавные микроанимации списка
- * - Выравнивание кнопок по низу карточек
- * - Квиз с вариантами и открытием Telegram
- * - Якоря + плавный скролл
+ * App.tsx — версия с удалённым дублем метрик + искры и scroll-parallax в Hero
+ * - УДАЛЕНО: секция Metrics (дублировала существующие формы)
+ * - ДОБАВЛЕНО: SparklesFX (canvas-искры) + плавный scroll-parallax фона
+ * - Остальная структура и тексты — без изменений
  */
 
-// ===== интеграции (заполнятся позже) =====
+// ===== интеграции (заполнить позже при необходимости) =====
 const LEAD_WEBHOOK = "";
 const TG_BOT_TOKEN = "";
 const TG_CHAT_ID = "";
@@ -110,7 +108,7 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
         <div className="hidden md:flex items-center gap-6 text-sm text-zinc-400">
           <a href="#services" className="hover:text-zinc-100">Услуги</a>
           <a href="#inside" className="hover:text-zinc-100">Внутри</a>
-          <a href="#cases" className="hover:text-зinc-100">Кейсы</a>
+          <a href="#cases" className="hover:text-zinc-100">Кейсы</a>
           <a href="#pricing" className="hover:text-zinc-100">Тарифы</a>
           <a href="#faq" className="hover:text-zinc-100">FAQ</a>
         </div>
@@ -137,7 +135,67 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-// ===== helpers для нового Hero =====
+// ===== SparklesFX (искры) =====
+function SparklesFX({ count = 60 }: { count?: number }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rafRef = useRef<number>(0);
+  const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
+
+  useEffect(() => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+    let w = 0, h = 0;
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      w = Math.floor(rect.width * dpr);
+      h = Math.floor(rect.height * dpr);
+      canvas.width = w; canvas.height = h;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    type P = { x:number; y:number; r:number; a:number; vx:number; vy:number; life:number; hue:number };
+    const ps: P[] = Array.from({ length: count }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.random() * 1.4 + 0.6,
+      a: Math.random() * 0.6 + 0.2,
+      vx: (Math.random() - 0.5) * 0.1 * dpr,
+      vy: (Math.random() - 0.5) * 0.1 * dpr,
+      life: Math.random() * 1,
+      hue: 260 + Math.random() * 120, // фиолетово-бирюзовый диапазон
+    }));
+
+    const step = () => {
+      ctx.clearRect(0, 0, w, h);
+      for (const p of ps) {
+        p.x += p.vx; p.y += p.vy; p.life += 0.005;
+        if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+        if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+
+        const twinkle = 0.5 + Math.sin(p.life * Math.PI * 2) * 0.5; // 0..1
+        ctx.beginPath();
+        ctx.globalAlpha = p.a * (0.4 + twinkle * 0.6);
+        ctx.fillStyle = `hsl(${p.hue}, 90%, 65%)`;
+        ctx.arc(p.x, p.y, p.r * dpr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      rafRef.current = requestAnimationFrame(step);
+    };
+
+    rafRef.current = requestAnimationFrame(step);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      window.removeEventListener("resize", resize);
+    };
+  }, [count, dpr]);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />;
+}
+
+// ===== helpers для Hero =====
 function useMouseTilt(strength = 10) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [style, setStyle] = useState<{ transform: string }>({ transform: "rotateX(0deg) rotateY(0deg) translateZ(0)" });
@@ -171,65 +229,7 @@ function useMouseTilt(strength = 10) {
   return { ref, style };
 }
 
-function MagneticButton({
-  children,
-  className = "",
-  onClick,
-  href,
-  target,
-  rel,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  onClick?: () => void;
-  href?: string;
-  target?: string;
-  rel?: string;
-}) {
-  const ref = useRef<HTMLButtonElement | HTMLAnchorElement | null>(null);
-  const [t, setT] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const enter = () => setT({ x: 0, y: 0 });
-    const move = (e: MouseEvent) => {
-      const r = el.getBoundingClientRect();
-      const x = e.clientX - (r.left + r.width / 2);
-      const y = e.clientY - (r.top + r.height / 2);
-      setT({ x: x * 0.15, y: y * 0.15 });
-    };
-    const leave = () => setT({ x: 0, y: 0 });
-
-    el.addEventListener("mouseenter", enter);
-    el.addEventListener("mousemove", move);
-    el.addEventListener("mouseleave", leave);
-    return () => {
-      el.removeEventListener("mouseenter", enter);
-      el.removeEventListener("mousemove", move);
-      el.removeEventListener("mouseleave", leave);
-    };
-  }, []);
-
-  const common = {
-    ref,
-    style: { transform: `translate3d(${t.x}px, ${t.y}px, 0)` },
-    className: `will-change-transform transition-transform duration-150 ${className}`,
-  } as any;
-
-  return href ? (
-    <a {...common} href={href} target={target} rel={rel} onClick={onClick}>
-      {children}
-    </a>
-  ) : (
-    <button {...common} type="button" onClick={onClick}>
-      {children}
-    </button>
-  );
-}
-
-// ===== HERO (WOW-версия) =====
+// ===== HERO (с искрами и scroll-parallax) =====
 function Hero({ onQuiz }: { onQuiz: () => void }) {
   const prefersReduced = useReducedMotion();
   const sources = [
@@ -254,9 +254,20 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
   const noisePng =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4/58BCgAHxgK1l9a4VQAAAABJRU5ErkJggg==";
 
+  // scroll-parallax: лёгкий сдвиг фоновых шаров
+  const [sy, setSy] = useState(0);
+  useEffect(() => {
+    if (prefersReduced) return;
+    const onScroll = () => setSy(window.scrollY || 0);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [prefersReduced]);
+  const parallaxY = Math.min(sy * 0.08, 80); // ограничим
+
   return (
     <Section id="home" className="relative overflow-hidden pt-16 pb-20 sm:pt-20 sm:pb-24" bg="bg-white text-zinc-900">
-      {/* подложка: сетка + шум */}
+      {/* сетка + шум */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -267,13 +278,20 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
           opacity: 0.9,
         }}
       />
-      {/* переливы */}
+
+      {/* искры */}
+      {!prefersReduced && <SparklesFX count={70} />}
+
+      {/* переливы с параллаксом */}
       {!prefersReduced && (
         <>
           <motion.div
             aria-hidden
             className="pointer-events-none absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full blur-3xl"
-            style={{ background: "radial-gradient(60% 60% at 50% 50%, rgba(99,102,241,.35) 0%, rgba(244,63,94,.15) 45%, rgba(255,255,255,0) 70%)" }}
+            style={{
+              background: "radial-gradient(60% 60% at 50% 50%, rgba(99,102,241,.35) 0%, rgba(244,63,94,.15) 45%, rgba(255,255,255,0) 70%)",
+              transform: `translateY(${parallaxY}px)`
+            }}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
@@ -281,7 +299,10 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
           <motion.div
             aria-hidden
             className="pointer-events-none absolute top-10 -right-24 h-[420px] w-[420px] rounded-full blur-3xl"
-            style={{ background: "radial-gradient(60% 60% at 50% 50%, rgba(168,85,247,.30) 0%, rgba(34,197,94,.12) 50%, rgba(255,255,255,0) 70%)" }}
+            style={{
+              background: "radial-gradient(60% 60% at 50% 50%, rgba(168,85,247,.30) 0%, rgba(34,197,94,.12) 50%, rgba(255,255,255,0) 70%)",
+              transform: `translateY(${parallaxY * 0.7}px)`
+            }}
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut", delay: 0.1 }}
@@ -289,7 +310,7 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
         </>
       )}
 
-      {/* shine эффект и градиент у заголовка */}
+      {/* стили заголовка */}
       <style>{`
         .hero-gradient-text{
           position: relative;
@@ -310,26 +331,11 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
           pointer-events:none;
           border-radius:.5rem;
         }
-        .hero-gradient-text:hover::after{
-          animation: shine 1.4s ease-out 1;
-        }
-        @keyframes heroGradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        @keyframes shine{
-          0%{ transform:translateX(-200%); }
-          100%{ transform:translateX(200%); }
-        }
-        .float-chip{
-          animation: float 6s ease-in-out infinite;
-        }
-        @keyframes float{
-          0%{ transform: translateY(0px); }
-          50%{ transform: translateY(-8px); }
-          100%{ transform: translateY(0px); }
-        }
+        .hero-gradient-text:hover::after{ animation: shine 1.4s ease-out 1; }
+        @keyframes heroGradient { 0% {background-position:0% 50%} 50% {background-position:100% 50%} 100% {background-position:0% 50%} }
+        @keyframes shine{ 0%{transform:translateX(-200%)} 100%{transform:translateX(200%)} }
+        .float-chip{ animation: float 6s ease-in-out infinite; }
+        @keyframes float{ 0%{transform:translateY(0)} 50%{transform:translateY(-8px)} 100%{transform:translateY(0)} }
       `}</style>
 
       <motion.div variants={container} initial="hidden" animate="show" className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center">
@@ -353,7 +359,7 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
             ))}
           </div>
 
-          {/* CTA: магнитные кнопки */}
+          {/* CTA */}
           <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
             <MagneticButton
               onClick={onQuiz}
@@ -371,14 +377,13 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
             </MagneticButton>
           </div>
 
-          {/* scroll-hint */}
           <div className="mt-8 hidden sm:flex items-center gap-2 text-xs text-zinc-500">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-zinc-300" />
             Листайте вниз — там кейсы и тарифы
           </div>
         </motion.div>
 
-        {/* 3D-карточка (параллакс) */}
+        {/* 3D-карточка */}
         <div className="lg:col-span-5">
           <motion.div
             ref={tilt.ref}
@@ -406,7 +411,7 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
               </div>
               <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center hover:shadow-sm transition-shadow">
                 <div className="text-zinc-900 font-semibold">18</div>
-                <div className="text-zinc-500 mt-0.5">источников</div>
+                <div className="text-зinc-500 mt-0.5">источников</div>
               </div>
             </div>
           </motion.div>
@@ -417,28 +422,6 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
           <ContinuousMarquee items={sources} speed={55} gap={72} />
         </div>
       </motion.div>
-    </Section>
-  );
-}
-
-// ===== Metrics =====
-function Metrics() {
-  const stats: [string, string][] = [
-    ["3.7x","средний ROAS"],
-    ["120k+","лидов за 12 мес."],
-    ["350+","креативов протестировано"],
-    ["18","источников трафика"]
-  ];
-  return (
-    <Section id="metrics" className="py-12" bg="bg-white text-zinc-900">
-      <ul className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {stats.map(([v, l], i) => (
-          <li key={i} className="card rounded-2xl border border-zinc-200 p-5 text-center bg-white/70 backdrop-blur hover:shadow-sm transition-shadow">
-            <div className="text-2xl md:text-3xl font-semibold">{v}</div>
-            <div className="text-xs text-zinc-500 mt-1">{l}</div>
-          </li>
-        ))}
-      </ul>
     </Section>
   );
 }
@@ -679,10 +662,10 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
           </div>
         </div>
         <div className="px-5 pb-5 pt-2 flex items-center justify-between">
-          <div className="text-xs text-зinc-500">Шаг {Math.min(step + 1, questions.length)} из {questions.length}</div>
+          <div className="text-xs text-zinc-500">Шаг {Math.min(step + 1, questions.length)} из {questions.length}</div>
           <div className="flex gap-2">
             {step > 0 && step <= questions.length - 1 && (
-              <button type="button" onClick={() => setStep(step - 1)} className="rounded-lg border border-зinc-300 px-4 py-2 text-sm">Назад</button>
+              <button type="button" onClick={() => setStep(step - 1)} className="rounded-lg border border-zinc-300 px-4 py-2 text-sm">Назад</button>
             )}
           </div>
         </div>
@@ -695,7 +678,8 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
 function TraffAgentLanding() {
   const [quizOpen, setQuizOpen] = useState(false);
   useEffect(() => {
-    const defs: any = { Header, Hero, Metrics, Services, Inside, Cases, Pricing, FAQ, Footer };
+    // sanity-проверка наличия компонентов
+    const defs: any = { Header, Hero, Services, Inside, Cases, Pricing, FAQ, Footer };
     Object.entries(defs).forEach(([name, ref]) => console.assert(typeof ref === "function", `${name} should be defined`));
   }, []);
   return (
@@ -703,7 +687,7 @@ function TraffAgentLanding() {
       <Header onQuiz={() => setQuizOpen(true)} />
       <main>
         <Hero onQuiz={() => setQuizOpen(true)} />
-        <Metrics />
+        {/* Удалил <Metrics /> как просили */}
         <Services onQuiz={() => setQuizOpen(true)} />
         <Inside />
         <Cases />
@@ -716,14 +700,4 @@ function TraffAgentLanding() {
         <button
           type="button"
           onClick={() => setQuizOpen(true)}
-          className="flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 text-white px-4 py-3 text-base font-semibold shadow-lg shadow-black/30 w-full"
-        >
-          Берем - обсудить проект
-        </button>
-      </div>
-      <QuizModal open={quizOpen} onClose={() => setQuizOpen(false)} />
-    </div>
-  );
-}
-
-export default function App() { return <TraffAgentLanding />; }
+          className="flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 text-white px-4
