@@ -2,17 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check, Menu, Sparkles, X } from "lucide-react";
 
-/**
- * App.tsx — полированная версия
- * - WOW Hero: искры (canvas), мягкий scroll-parallax, градиентный заголовок
- * - Единый вертикальный ритм, аккуратные тени и ховеры
- * - Кнопки в карточках строго по низу
- * - Квиз с вариантами + переход в Telegram
- * - Плавные якоря, корректная мобильная CTA
- * - Без синтаксических ошибок и странных unicode-escape
- */
-
-/* ===== интеграции (можно заполнить позже) ===== */
+/* ===== интеграции (опционально) ===== */
 const LEAD_WEBHOOK = "";
 const TG_BOT_TOKEN = "";
 const TG_CHAT_ID = "";
@@ -25,21 +15,11 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 
 /* ===== утилиты ===== */
-function Section({
-  id, children, className = "", bg = "",
-}: { id?: string; children: React.ReactNode; className?: string; bg?: string }) {
-  return (
-    <section id={id} className={`${bg} relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 ${className}`}>
-      {children}
-    </section>
-  );
+function Section({ id, children, className = "", bg = "" }: { id?: string; children: React.ReactNode; className?: string; bg?: string }) {
+  return <section id={id} className={`${bg} relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 ${className}`}>{children}</section>;
 }
 function Kicker({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <span className={`inline-flex items-center gap-2 text-[10px] sm:text-xs uppercase tracking-widest text-zinc-500 ${className}`}>
-      <Sparkles className="h-3.5 w-3.5" /> {children}
-    </span>
-  );
+  return <span className={`inline-flex items-center gap-2 text-[10px] sm:text-xs uppercase tracking-widest text-zinc-500 ${className}`}><Sparkles className="h-3.5 w-3.5" /> {children}</span>;
 }
 function H2({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <h2 className={`mt-2 text-[22px] sm:text-2xl md:text-4xl font-semibold leading-tight tracking-tight ${className}`}>{children}</h2>;
@@ -77,7 +57,7 @@ function ContinuousMarquee({ items, speed = 55, gap = 72 }: { items: string[]; s
   const strip = (k: string, x: number) => (
     <div
       key={k}
-      ref={k === "a" ? stripRef : null}
+      ref={k==="a"?stripRef:null}
       className="absolute left-0 top-0 inline-flex items-center font-medium uppercase tracking-wide text-zinc-700"
       style={{ transform: `translateX(${x}px)`, gap: `${gap}px`, whiteSpace: "nowrap", padding: "10px 0" }}
     >
@@ -102,69 +82,117 @@ function ContinuousMarquee({ items, speed = 55, gap = 72 }: { items: string[]; s
   );
 }
 
+/* ===== Тёмный магнитный курсор ===== */
+function MagneticCursor() {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const mouse = useRef({ x: 0, y: 0 });
+  const pos = useRef({ x: 0, y: 0 });
+  const scale = useRef(1);
+  const target = useRef<HTMLElement | null>(null);
+  const raf = useRef<number>(0);
+
+  useEffect(() => {
+    const el = ref.current!;
+    const onMove = (e: MouseEvent) => { mouse.current.x = e.clientX; mouse.current.y = e.clientY; };
+    const tick = () => {
+      // если есть магнит — тянемся к центру таргета
+      let tx = mouse.current.x, ty = mouse.current.y, s = 1;
+      if (target.current) {
+        const r = target.current.getBoundingClientRect();
+        tx = r.left + r.width / 2;
+        ty = r.top + r.height / 2;
+        s = 1.6;
+      }
+      pos.current.x += (tx - pos.current.x) * 0.18;
+      pos.current.y += (ty - pos.current.y) * 0.18;
+      scale.current += (s - scale.current) * 0.18;
+
+      el.style.transform = `translate3d(${pos.current.x - 12}px, ${pos.current.y - 12}px, 0) scale(${scale.current})`;
+      raf.current = requestAnimationFrame(tick);
+    };
+
+    const enterMagnet = (e: Event) => { target.current = e.currentTarget as HTMLElement; };
+    const leaveMagnet = () => { target.current = null; };
+
+    window.addEventListener("mousemove", onMove, { passive: true });
+    document.querySelectorAll<HTMLElement>('[data-cursor="magnet"]').forEach(n => {
+      n.addEventListener("mouseenter", enterMagnet);
+      n.addEventListener("mouseleave", leaveMagnet);
+    });
+
+    raf.current = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf.current);
+      window.removeEventListener("mousemove", onMove);
+      document.querySelectorAll<HTMLElement>('[data-cursor="magnet"]').forEach(n => {
+        n.removeEventListener("mouseenter", enterMagnet);
+        n.removeEventListener("mouseleave", leaveMagnet);
+      });
+    };
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      aria-hidden
+      className="fixed left-0 top-0 z-[200] h-6 w-6 rounded-full"
+      style={{
+        pointerEvents: "none",
+        background: "rgba(255,255,255,0.08)",
+        border: "1px solid rgba(255,255,255,0.35)",
+        mixBlendMode: "difference",
+        backdropFilter: "blur(2px)",
+        transform: "translate3d(-9999px,-9999px,0)",
+        transition: "background 200ms, border 200ms",
+      }}
+    />
+  );
+}
+
 /* ===== Header ===== */
 function Header({ onQuiz }: { onQuiz: () => void }) {
   const [open, setOpen] = useState(false);
-
   useEffect(() => {
     const handler = (e: any) => {
       const a = (e.target as HTMLElement).closest('a[href^="#"]') as HTMLAnchorElement | null; if (!a) return;
-      const id = a.getAttribute("href");
-      if (id && id.startsWith("#") && id.length > 1) {
-        const el = document.querySelector(id);
-        if (el) { e.preventDefault(); (el as HTMLElement).scrollIntoView({ behavior: "smooth", block: "start" }); setOpen(false); }
+      const id = a.getAttribute('href'); if (id && id.startsWith('#') && id.length>1) {
+        const el = document.querySelector(id); if (el) { e.preventDefault(); (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' }); setOpen(false); }
       }
     };
-    const nav = document.getElementById("main-nav");
-    if (nav) nav.addEventListener("click", handler);
-    return () => nav && nav.removeEventListener("click", handler);
+    const nav = document.getElementById('main-nav'); if (nav) nav.addEventListener('click', handler); return () => nav && nav.removeEventListener('click', handler);
   }, []);
-
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-zinc-950/70 backdrop-blur">
       <nav id="main-nav" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
         <a href="#home" className="text-sm font-semibold tracking-tight">TraffAgent</a>
         <div className="hidden md:flex items-center gap-6 text-sm text-zinc-400">
-          <a href="#services" className="hover:text-zinc-100">Услуги</a>
-          <a href="#inside" className="hover:text-zinc-100">Внутри</a>
-          <a href="#cases" className="hover:text-zinc-100">Кейсы</a>
-          <a href="#pricing" className="hover:text-zinc-100">Тарифы</a>
-          <a href="#faq" className="hover:text-zinc-100">FAQ</a>
+          <a href="#services" className="hover:text-zinc-100" data-cursor="magnet">Услуги</a>
+          <a href="#inside" className="hover:text-zinc-100" data-cursor="magnet">Внутри</a>
+          <a href="#cases" className="hover:text-zinc-100" data-cursor="magnet">Кейсы</a>
+          <a href="#pricing" className="hover:text-zinc-100" data-cursor="magnet">Тарифы</a>
+          <a href="#faq" className="hover:text-зinc-100" data-cursor="magnet">FAQ</a>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onQuiz}
+            data-cursor="magnet"
             className="group hidden sm:inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-3 py-2 text-sm font-semibold text-white shadow hover:shadow-lg transition-transform hover:scale-[1.02]"
           >
             Запустить траф <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </button>
-          <button
-            type="button"
-            onClick={() => setOpen(v => !v)}
-            aria-label="Открыть меню"
-            className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10"
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          <button type="button" onClick={() => setOpen(v=>!v)} aria-label="Открыть меню" className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10">{open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
         </div>
       </nav>
-
       {open && (
         <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur">
           <div className="mx-auto max-w-6xl px-4 py-3 grid gap-2 text-base">
-            <a href="#services" className="py-3">Услуги</a>
-            <a href="#inside" className="py-3">Внутри</a>
-            <a href="#cases" className="py-3">Кейсы</a>
-            <a href="#pricing" className="py-3">Тарифы</a>
-            <a href="#faq" className="py-3">FAQ</a>
-            <button
-              type="button"
-              onClick={() => { setOpen(false); onQuiz(); }}
-              className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white"
-            >
-              Запустить траф
-            </button>
+            <a href="#services" className="py-3" data-cursor="magnet">Услуги</a>
+            <a href="#inside" className="py-3" data-cursor="magnet">Внутри</a>
+            <a href="#cases" className="py-3" data-cursor="magnet">Кейсы</a>
+            <a href="#pricing" className="py-3" data-cursor="magnet">Тарифы</a>
+            <a href="#faq" className="py-3" data-cursor="magnet">FAQ</a>
+            <button type="button" onClick={() => { setOpen(false); onQuiz(); }} data-cursor="magnet" className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white">Запустить траф</button>
           </div>
         </div>
       )}
@@ -172,67 +200,7 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-/* ===== SparklesFX (искры) ===== */
-function SparklesFX({ count = 70 }: { count?: number }) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const rafRef = useRef<number>(0);
-  const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
-
-  useEffect(() => {
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext("2d")!;
-    let w = 0, h = 0;
-
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      w = Math.floor(rect.width * dpr);
-      h = Math.floor(rect.height * dpr);
-      canvas.width = w; canvas.height = h;
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    type P = { x:number; y:number; r:number; a:number; vx:number; vy:number; life:number; hue:number };
-    const ps: P[] = Array.from({ length: count }, () => ({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      r: Math.random() * 1.4 + 0.6,
-      a: Math.random() * 0.6 + 0.2,
-      vx: (Math.random() - 0.5) * 0.1 * dpr,
-      vy: (Math.random() - 0.5) * 0.1 * dpr,
-      life: Math.random() * 1,
-      hue: 260 + Math.random() * 120,
-    }));
-
-    const step = () => {
-      ctx.clearRect(0, 0, w, h);
-      for (const p of ps) {
-        p.x += p.vx; p.y += p.vy; p.life += 0.005;
-        if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
-        if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
-
-        const twinkle = 0.5 + Math.sin(p.life * Math.PI * 2) * 0.5;
-        ctx.beginPath();
-        ctx.globalAlpha = p.a * (0.4 + twinkle * 0.6);
-        ctx.fillStyle = `hsl(${p.hue}, 90%, 65%)`;
-        ctx.arc(p.x, p.y, p.r * dpr, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-      rafRef.current = requestAnimationFrame(step);
-    };
-
-    rafRef.current = requestAnimationFrame(step);
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-      window.removeEventListener("resize", resize);
-    };
-  }, [count, dpr]);
-
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />;
-}
-
-/* ===== helpers ===== */
+/* ===== helpers для HERO ===== */
 function useMouseTilt(strength = 10) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [style, setStyle] = useState<{ transform: string }>({ transform: "rotateX(0deg) rotateY(0deg) translateZ(0)" });
@@ -266,19 +234,57 @@ function useMouseTilt(strength = 10) {
   return { ref, style };
 }
 
+function MagneticButton({
+  children, className = "", onClick, href, target, rel,
+}: { children: React.ReactNode; className?: string; onClick?: () => void; href?: string; target?: string; rel?: string; }) {
+  const ref = useRef<HTMLButtonElement | HTMLAnchorElement | null>(null);
+  const [t, setT] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const enter = () => setT({ x: 0, y: 0 });
+    const move = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      const x = e.clientX - (r.left + r.width / 2);
+      const y = e.clientY - (r.top + r.height / 2);
+      setT({ x: x * 0.15, y: y * 0.15 });
+    };
+    const leave = () => setT({ x: 0, y: 0 });
+
+    el.addEventListener("mouseenter", enter);
+    el.addEventListener("mousemove", move);
+    el.addEventListener("mouseleave", leave);
+    return () => {
+      el.removeEventListener("mouseenter", enter);
+      el.removeEventListener("mousemove", move);
+      el.removeEventListener("mouseleave", leave);
+    };
+  }, []);
+
+  const common = {
+    ref,
+    style: { transform: `translate3d(${t.x}px, ${t.y}px, 0)` },
+    className: `will-change-transform transition-transform duration-150 ${className}`,
+    "data-cursor": "magnet",
+  } as any;
+
+  return href ? (
+    <a {...common} href={href} target={target} rel={rel}>{children}</a>
+  ) : (
+    <button {...common} type="button" onClick={onClick}>{children}</button>
+  );
+}
+
 /* ===== HERO ===== */
 function Hero({ onQuiz }: { onQuiz: () => void }) {
   const prefersReduced = useReducedMotion();
-  const sources = [
-    "Meta (Facebook + Instagram + Threads)",
-    "YouTube",
-    "TikTok",
-    "Google Ads",
-    "Telegram",
-    "Twitter / X",
-    "LinkedIn Ads",
-    "Reddit Ads",
-    "Snapchat Ads",
+  // чипы/прочие элементы — старые подписи
+  const sources = ["Meta (Facebook + Instagram + Threads)","YouTube","TikTok","Google Ads","Telegram","Twitter / X","LinkedIn Ads","Reddit Ads","Snapchat Ads"];
+  // ТОЛЬКО для бегущей строки — новый текст
+  const marqueeItems = [
+    "Финтех, порнуха, чернуха, вейпы — мы не боимся запретов. Здесь реклама живёт дольше любого модератора."
   ];
   const tilt = useMouseTilt(8);
 
@@ -301,69 +307,30 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
 
   return (
     <Section id="home" className="relative overflow-hidden pt-16 pb-20 sm:pt-20 sm:pb-24" bg="bg-white text-zinc-900">
-      {/* сетка + шум */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,${gridSvg}"), url(${noisePng})`,
-          backgroundSize: "32px 32px, auto",
-          backgroundBlendMode: "normal, soft-light",
-          opacity: 0.9,
-        }}
-      />
-
+      <div aria-hidden className="pointer-events-none absolute inset-0" style={{backgroundImage:`url("data:image/svg+xml,${gridSvg}"), url(${noisePng})`,backgroundSize:"32px 32px, auto",backgroundBlendMode:"normal, soft-light",opacity:.9}} />
       {!prefersReduced && <SparklesFX count={70} />}
 
       {!prefersReduced && (
         <>
-          <motion.div
-            aria-hidden
-            className="pointer-events-none absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full blur-3xl"
-            style={{
-              background: "radial-gradient(60% 60% at 50% 50%, rgba(99,102,241,.35) 0%, rgba(244,63,94,.15) 45%, rgba(255,255,255,0) 70%)",
-              transform: `translateY(${parallaxY}px)`,
-            }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-          />
-          <motion.div
-            aria-hidden
-            className="pointer-events-none absolute top-10 -right-24 h-[420px] w-[420px] rounded-full blur-3xl"
-            style={{
-              background: "radial-gradient(60% 60% at 50% 50%, rgba(168,85,247,.30) 0%, rgba(34,197,94,.12) 50%, rgba(255,255,255,0) 70%)",
-              transform: `translateY(${parallaxY * 0.7}px)`,
-            }}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: "easeOut", delay: 0.1 }}
-          />
+          <motion.div aria-hidden className="pointer-events-none absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full blur-3xl" style={{background:"radial-gradient(60% 60% at 50% 50%, rgba(99,102,241,.35) 0%, rgba(244,63,94,.15) 45%, rgba(255,255,255,0) 70%)",transform:`translateY(${parallaxY}px)`}} initial={{opacity:0,scale:.9}} animate={{opacity:1,scale:1}} transition={{duration:1.2,ease:"easeOut"}}/>
+          <motion.div aria-hidden className="pointer-events-none absolute top-10 -right-24 h-[420px] w-[420px] rounded-full blur-3xl" style={{background:"radial-gradient(60% 60% at 50% 50%, rgba(168,85,247,.30) 0%, rgba(34,197,94,.12) 50%, rgba(255,255,255,0) 70%)",transform:`translateY(${parallaxY*.7}px)`}} initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}} transition={{duration:1,ease:"easeOut",delay:.1}}/>
         </>
       )}
 
       <style>{`
         .hero-gradient-text{
-          position: relative;
-          background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899, #22c55e, #06b6d4);
-          background-size: 200% 200%;
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-          animation: heroGradient 7s ease-in-out infinite;
+          position:relative;
+          background:linear-gradient(90deg,#6366f1,#a855f7,#ec4899,#22c55e,#06b6d4);
+          background-size:200% 200%;
+          -webkit-background-clip:text;background-clip:text;color:transparent;
+          animation:heroGradient 7s ease-in-out infinite;
         }
-        .hero-gradient-text::after{
-          content:"";
-          position:absolute; inset:0;
-          background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.6) 15%, transparent 30%);
-          transform: translateX(-200%);
-          pointer-events:none; border-radius:.5rem;
-        }
-        .hero-gradient-text:hover::after{ animation: shine 1.4s ease-out 1; }
-        @keyframes heroGradient { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-        @keyframes shine{ 0%{transform:translateX(-200%)} 100%{transform:translateX(200%)} }
-        .float-chip{ animation: float 6s ease-in-out infinite; }
-        @keyframes float{ 0%{transform:translateY(0)} 50%{transform:translateY(-8px)} 100%{transform:translateY(0)} }
+        .hero-gradient-text::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 0%,rgba(255,255,255,.6) 15%,transparent 30%);transform:translateX(-200%);pointer-events:none;border-radius:.5rem}
+        .hero-gradient-text:hover::after{animation:shine 1.4s ease-out 1}
+        @keyframes heroGradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+        @keyframes shine{0%{transform:translateX(-200%)}100%{transform:translateX(200%)}}
+        .float-chip{animation:float 6s ease-in-out infinite}
+        @keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
       `}</style>
 
       <motion.div variants={container} initial="hidden" animate="show" className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center">
@@ -377,31 +344,18 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            {["Meta", "YouTube", "TikTok", "Google", "Telegram", "Twitter / X"].map((t, i) => (
-              <span
-                key={t}
-                className="float-chip inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white/80 px-3 py-1.5 text-xs text-zinc-700 shadow-sm"
-                style={{ animationDelay: `${i * 0.2}s` }}
-              >
-                <span className="inline-block h-2 w-2 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500" />
-                {t}
+            {["Meta","YouTube","TikTok","Google","Telegram","Twitter / X"].map((t,i)=>(
+              <span key={t} className="float-chip inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white/80 px-3 py-1.5 text-xs text-zinc-700 shadow-sm" style={{animationDelay:`${i*.2}s`}}>
+                <span className="inline-block h-2 w-2 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500" /> {t}
               </span>
             ))}
           </div>
 
           <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
-            <MagneticButton
-              onClick={onQuiz}
-              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-6 py-4 text-base sm:text-sm font-semibold text-white shadow-xl hover:shadow-2xl hover:scale-[1.02]"
-            >
+            <MagneticButton onClick={onQuiz} className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-6 py-4 text-base sm:text-sm font-semibold text-white shadow-xl hover:shadow-2xl hover:scale-[1.02]">
               Запустить траф <ArrowRight className="ml-2 h-5 w-5" />
             </MagneticButton>
-            <MagneticButton
-              href="https://t.me/traffagent"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="inline-flex items-center justify-center rounded-2xl border border-zinc-300 bg-white px-6 py-4 text-base sm:text-sm font-semibold hover:bg-zinc-100 hover:scale-[1.01]"
-            >
+            <MagneticButton href="https://t.me/traffagent" target="_blank" rel="noreferrer noopener" className="inline-flex items-center justify-center rounded-2xl border border-zinc-300 bg-white px-6 py-4 text-base sm:text-sm font-semibold hover:bg-zinc-100 hover:scale-[1.01]">
               Похуй, делаем!
             </MagneticButton>
           </div>
@@ -413,16 +367,14 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
         </motion.div>
 
         <div className="lg:col-span-5">
-          <motion.div
-            {...useMouseTilt(8)}
-            className="relative rounded-3xl border border-zinc-200/70 bg-white/75 backdrop-blur-xl p-5 shadow-[0_30px_60px_-15px_rgba(0,0,0,.15)] will-change-transform"
-          >
+          <motion.div className="relative rounded-3xl border border-zinc-200/70 bg-white/75 backdrop-blur-xl p-5 shadow-[0_30px_60px_-15px_rgba(0,0,0,.15)] will-change-transform">
             <TiltCard />
           </motion.div>
         </div>
 
+        {/* только здесь — новый текст */}
         <div className="lg:col-span-12">
-          <ContinuousMarquee items={sources} speed={55} gap={72} />
+          <ContinuousMarquee items={marqueeItems} speed={55} gap={72} />
         </div>
       </motion.div>
     </Section>
@@ -443,67 +395,16 @@ function TiltCard() {
         <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-500" /> сквозная аналитика</li>
       </ul>
       <div className="mt-4 grid grid-cols-3 gap-2 text-[11px]">
-        <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center hover:shadow-sm transition-shadow">
-          <div className="text-zinc-900 font-semibold">3.7x</div>
-          <div className="text-zinc-500 mt-0.5">ROAS avg</div>
-        </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center hover:shadow-sm transition-shadow">
-          <div className="text-zinc-900 font-semibold">120k+</div>
-          <div className="text-zinc-500 mt-0.5">лидов/год</div>
-        </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center hover:shadow-sm transition-shadow">
-          <div className="text-zinc-900 font-semibold">18</div>
-          <div className="text-zinc-500 mt-0.5">источников</div>
-        </div>
+        <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center"><div className="text-zinc-900 font-semibold">3.7x</div><div className="text-zinc-500 mt-0.5">ROAS avg</div></div>
+        <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center"><div className="text-zinc-900 font-semibold">120k+</div><div className="text-zinc-500 mt-0.5">лидов/год</div></div>
+        <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center"><div className="text-зinc-900 font-semibold">18</div><div className="text-зinc-500 mt-0.5">источников</div></div>
       </div>
     </>
   );
 }
 
-/* ===== магнитная кнопка ===== */
-function MagneticButton({
-  children, className = "", onClick, href, target, rel,
-}: {
-  children: React.ReactNode; className?: string; onClick?: () => void; href?: string; target?: string; rel?: string;
-}) {
-  const ref = useRef<HTMLButtonElement | HTMLAnchorElement | null>(null);
-  const [t, setT] = useState({ x: 0, y: 0 });
+/* ===== блоки ниже без изменений логики, добавлены data-cursor="magnet" на ключевые кнопки ===== */
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const enter = () => setT({ x: 0, y: 0 });
-    const move = (e: MouseEvent) => {
-      const r = el.getBoundingClientRect();
-      const x = e.clientX - (r.left + r.width / 2);
-      const y = e.clientY - (r.top + r.height / 2);
-      setT({ x: x * 0.15, y: y * 0.15 });
-    };
-    const leave = () => setT({ x: 0, y: 0 });
-    el.addEventListener("mouseenter", enter);
-    el.addEventListener("mousemove", move);
-    el.addEventListener("mouseleave", leave);
-    return () => {
-      el.removeEventListener("mouseenter", enter);
-      el.removeEventListener("mousemove", move);
-      el.removeEventListener("mouseleave", leave);
-    };
-  }, []);
-
-  const common = {
-    ref,
-    style: { transform: `translate3d(${t.x}px, ${t.y}px, 0)` },
-    className: `will-change-transform transition-transform duration-150 ${className}`,
-  } as any;
-
-  return href ? (
-    <a {...common} href={href} target={target} rel={rel} onClick={onClick}>{children}</a>
-  ) : (
-    <button {...common} type="button" onClick={onClick}>{children}</button>
-  );
-}
-
-/* ===== Services ===== */
 function Services({ onQuiz }: { onQuiz: () => void }) {
   const groups = [
     { title: "Медиабаинг + Комплаенс", desc: "Meta, Google, TikTok, альтернативы. Anti-ban, прогрев, резервы.", bullets: ["Гипотезы и тесты", "Масштабирование", "Кейсы по вайт/грей"] },
@@ -517,27 +418,16 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
       <H2>Услуги</H2>
       <ul className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 text-sm items-stretch">
         {groups.map((g, i) => (
-          <li
-            key={i}
-            className="group h-full flex flex-col rounded-2xl border border-white/10 p-5 bg-gradient-to-b from-white/5 to-transparent transition-all hover:-translate-y-0.5 hover:border-white/20"
-          >
+          <li key={i} className="group h-full flex flex-col rounded-2xl border border-white/10 p-5 bg-gradient-to-b from-white/5 to-transparent transition-all hover:-translate-y-0.5 hover:border-white/20">
             <div className="h-1 w-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 mb-3 opacity-90 group-hover:opacity-100" />
             <div className="flex-1">
               <div className="font-medium text-base sm:text-[15px]">{g.title}</div>
               <p className="mt-1 text-zinc-400">{g.desc}</p>
               <ul className="mt-3 space-y-1 text-[12px] sm:text-xs text-zinc-400">
-                {g.bullets.map((b, idx) => (
-                  <li key={idx} className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-zinc-300" /> {b}
-                  </li>
-                ))}
+                {g.bullets.map((b, idx) => (<li key={idx} className="flex items-center gap-2"><Check className="h-4 w-4 text-zinc-300" /> {b}</li>))}
               </ul>
             </div>
-            <button
-              type="button"
-              onClick={onQuiz}
-              className="mt-auto inline-flex items-center justify-center rounded-xl bg-white text-black px-4 py-2 text-sm font-medium w-full hover:bg-zinc-100 transition-colors"
-            >
+            <button type="button" onClick={onQuiz} data-cursor="magnet" className="mt-auto inline-flex items-center justify-center rounded-xl bg-white text-black px-4 py-2 text-sm font-medium w-full hover:bg-zinc-100 transition-colors">
               Запустить траф
             </button>
           </li>
@@ -547,7 +437,6 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-/* ===== Inside ===== */
 function Inside() {
   const steps: [string, string][] = [
     ["Discovery","Погружаемся в продукт, аудиторию и цели. KPI и рамки."],
@@ -572,7 +461,6 @@ function Inside() {
   );
 }
 
-/* ===== Cases ===== */
 function Cases() {
   const list: [string, string, string][] = [
     ["FinTech SaaS","+212% MRR","Google + LinkedIn + контент"],
@@ -598,7 +486,6 @@ function Cases() {
   );
 }
 
-/* ===== Pricing ===== */
 function Pricing({ onQuiz }: { onQuiz: () => void }) {
   const plans = [
     { name: "Старт", price: "от $1k", desc: "Для тестов и первых продаж", features: ["Стратегия", "3-5 подходов", "1-2 канала", "Еженед. отчет"], highlight: false },
@@ -611,30 +498,15 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
       <H2 className="text-black">Тарифы</H2>
       <ul className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
         {plans.map((p, i) => (
-          <li
-            key={i}
-            className={`group h-full flex flex-col rounded-2xl border p-6 bg-white/80 backdrop-blur ${p.highlight ? "border-zinc-300" : "border-zinc-200"} transition-all hover:-translate-y-0.5 hover:shadow-md`}
-          >
-            {p.highlight && (
-              <span className="mb-3 inline-block rounded-full border border-zinc-300 px-2 py-0.5 text-xs bg-gradient-to-r from-indigo-100 to-fuchsia-100">
-                Популярный
-              </span>
-            )}
+          <li key={i} className={`group h-full flex flex-col rounded-2xl border p-6 bg-white/80 backdrop-blur ${p.highlight ? "border-zinc-300" : "border-zinc-200"} transition-all hover:-translate-y-0.5 hover:shadow-md`}>
+            {p.highlight && (<span className="mb-3 inline-block rounded-full border border-zinc-300 px-2 py-0.5 text-xs bg-gradient-to-r from-indigo-100 to-fuchsia-100">Популярный</span>)}
             <div className="text-lg font-semibold">{p.name}</div>
             <div className="mt-1 text-2xl font-bold">{p.price}</div>
             <p className="mt-1 text-sm text-zinc-600">{p.desc}</p>
             <ul className="mt-4 space-y-1 text-sm text-zinc-600">
-              {p.features.map((f, idx) => (
-                <li key={idx} className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-indigo-500" /> {f}
-                </li>
-              ))}
+              {p.features.map((f, idx) => (<li key={idx} className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-500" /> {f}</li>))}
             </ul>
-            <button
-              type="button"
-              onClick={onQuiz}
-              className="mt-auto inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 text-sm font-medium text-white w-full shadow-lg hover:shadow-xl transition-transform hover:scale-[1.02]"
-            >
+            <button type="button" onClick={onQuiz} data-cursor="magnet" className="mt-auto inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-4 py-3 text-sm font-medium text-white w-full shadow-lg hover:shadow-xl transition-transform hover:scale-[1.02]">
               Берем
             </button>
           </li>
@@ -644,7 +516,6 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-/* ===== FAQ ===== */
 function FAQ() {
   const qa: [string, string][] = [
     ["С какими вертикалями работаете?","E-com, edtech, подписки, mobile, SaaS, финтех."],
@@ -667,7 +538,6 @@ function FAQ() {
   );
 }
 
-/* ===== Footer ===== */
 function Footer() {
   return (
     <footer className="border-t border-white/5 py-8 bg-zinc-950 text-zinc-400">
@@ -682,18 +552,17 @@ function Footer() {
 }
 
 /* ===== Квиз ===== */
-function QuizModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
   async function sendLead(payload: any) {
     try {
       const text = [
         "Новая заявка TraffAgent",
-        `Бюджет: ${payload.budget || "-"}`,
-        `Ниша: ${payload.niche || "-"}`,
-        `GEO: ${payload.geo || "-"}`,
+        `Бюджет: ${payload.budget || '-'}`,
+        `Ниша: ${payload.niche || '-'}`,
+        `GEO: ${payload.geo || '-'}`,
         `UA: ${navigator.userAgent}`,
-        `Time: ${new Date().toISOString()}`,
+        `Time: ${new Date().toISOString()}`
       ].join("\n");
-
       if (LEAD_WEBHOOK) {
         await fetch(LEAD_WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, answers: payload }), keepalive: true });
         return;
@@ -701,28 +570,20 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void }) {
       if (BOT_TOKEN && CHAT_ID) {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: CHAT_ID, text }), keepalive: true });
       }
-    } catch {
-      /* no-op */
-    }
+    } catch {}
   }
-
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({ budget: "", niche: "", geo: "" });
   const textRef = useRef<HTMLTextAreaElement | null>(null);
-
   useEffect(() => { if (!open) { setStep(0); setAnswers({ budget: "", niche: "", geo: "" }); } }, [open]);
-
   const questions = [
     { key: "budget", text: "Какой у вас бюджет на месяц?", options: ["до $1k", "$1k–$5k", "$5k–$20k", "$20k+"] },
     { key: "niche", text: "Какая ниша/продукт?", options: ["E-com", "SaaS", "Mobile", "Инфо", "Финтех", "Другое"] },
     { key: "geo", text: "Целевые GEO/рынки?", options: ["EU", "US/CA", "MENA", "LatAm", "SEA", "Другое"] },
   ] as const;
-
   if (!open) return null;
-
   const tgLink = "https://t.me/traffagent";
   const summaryText = `Заявка TraffAgent — бюджет: ${answers.budget}; ниша: ${answers.niche}; GEO: ${answers.geo}`;
-
   const choose = async (opt: string) => {
     if (step < questions.length) {
       const key = questions[step].key as keyof typeof answers;
@@ -730,64 +591,43 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void }) {
       setAnswers(nextAnswers);
       const lastIndex = questions.length - 1;
       if (step < lastIndex) setStep(step + 1);
-      else {
-        await sendLead(nextAnswers);
-        try { window.open(tgLink, "_blank", "noopener"); } catch { /* no-op */ }
-        setStep(step + 1);
-      }
+      else { await sendLead(nextAnswers); try { window.open(tgLink, "_blank", "noopener"); } catch {} setStep(step + 1); }
     }
   };
-
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="relative z-[101] w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl bg-white text-zinc-900 shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-зinc-200">
           <div className="text-sm font-semibold">Мини-квиз</div>
-          <button type="button" onClick={onClose} className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-zinc-200" aria-label="Закрыть">×</button>
+          <button type="button" onClick={onClose} className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-зinc-200" aria-label="Закрыть">×</button>
         </div>
-
         <div>
-          {/* шаги */}
           {step < questions.length && (
             <div className="px-5 py-4">
               <div className="text-sm font-medium">{questions[step].text}</div>
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                {questions[step].options.map(opt => (
-                  <button
-                    type="button"
-                    key={opt}
-                    onClick={() => choose(opt)}
-                    className="w-full rounded-xl border border-zinc-300 px-4 py-3 text-left active:scale-[.99]"
-                  >
-                    {opt}
-                  </button>
+                {questions[step].options.map((opt) => (
+                  <button type="button" key={opt} onClick={() => choose(opt)} className="w-full rounded-xl border border-зinc-300 px-4 py-3 text-left active:scale-[.99]">{opt}</button>
                 ))}
               </div>
             </div>
           )}
-
-          {/* финал */}
           {step === questions.length && (
             <div className="px-5 py-5 space-y-4">
               <div className="text-sm font-medium">Готово! Мы открыли Telegram.</div>
-              <p className="text-sm text-zinc-600">Если Telegram не открылся — нажмите кнопку ниже. Текст с ответами можно скопировать вручную.</p>
-              <textarea ref={textRef} value={summaryText} readOnly className="w-full rounded-xl border border-zinc-300 px-3 py-3 text-sm text-zinc-700" />
+              <p className="text-sm text-зinc-600">Если Telegram не открылся — нажмите кнопку ниже. Текст с ответами можно скопировать вручную.</p>
+              <textarea ref={textRef} value={summaryText} readOnly className="w-full rounded-xl border border-зinc-300 px-3 py-3 text-sm text-зinc-700" />
               <div className="flex flex-col sm:flex-row gap-2">
-                <a href={tgLink} target="_blank" rel="noreferrer noopener" className="inline-flex items-center justify-center rounded-xl bg-zinc-900 text-white px-4 py-2 text-sm font-semibold w-full sm:w-auto">
-                  Перейти в Telegram
-                </a>
+                <a href={tgLink} target="_blank" rel="noreferrer noopener" className="inline-flex items-center justify-center rounded-xl bg-зinc-900 text-white px-4 py-2 text-sm font-semibold w-full sm:w-auto">Перейти в Telegram</a>
               </div>
             </div>
           )}
         </div>
-
         <div className="px-5 pb-5 pt-2 flex items-center justify-between">
-          <div className="text-xs text-zinc-500">Шаг {Math.min(step + 1, questions.length)} из {questions.length}</div>
+          <div className="text-xs text-зinc-500">Шаг {Math.min(step + 1, questions.length)} из {questions.length}</div>
           {step > 0 && step <= questions.length - 1 && (
-            <button type="button" onClick={() => setStep(step - 1)} className="rounded-lg border border-zinc-300 px-4 py-2 text-sm">
-              Назад
-            </button>
+            <button type="button" onClick={() => setStep(step - 1)} className="rounded-lg border border-зinc-300 px-4 py-2 text-sm">Назад</button>
           )}
         </div>
       </div>
@@ -795,17 +635,16 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
-/* ===== Корневой компонент ===== */
+/* ===== Корень ===== */
 function TraffAgentLanding() {
   const [quizOpen, setQuizOpen] = useState(false);
-
   useEffect(() => {
     const defs: any = { Header, Hero, Services, Inside, Cases, Pricing, FAQ, Footer };
     Object.entries(defs).forEach(([name, ref]) => console.assert(typeof ref === "function", `${name} should be defined`));
   }, []);
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900 text-zinc-200">
+    <div className="min-h-screen bg-gradient-to-b from-зinc-950 via-зinc-950 to-зinc-900 text-зinc-200">
+      <MagneticCursor />
       <Header onQuiz={() => setQuizOpen(true)} />
       <main>
         <Hero onQuiz={() => setQuizOpen(true)} />
@@ -816,23 +655,14 @@ function TraffAgentLanding() {
         <FAQ />
       </main>
       <Footer />
-
-      {/* мобильная CTA */}
       <div className="fixed bottom-3 inset-x-3 sm:hidden z-30">
-        <button
-          type="button"
-          onClick={() => setQuizOpen(true)}
-          className="flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 text-white px-4 py-3 text-base font-semibold shadow-lg shadow-black/30 w-full"
-        >
+        <button type="button" onClick={() => setQuizOpen(true)} data-cursor="magnet" className="flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 text-white px-4 py-3 text-base font-semibold shadow-lg shadow-black/30 w-full">
           Берем — обсудить проект
         </button>
       </div>
-
       <QuizModal open={quizOpen} onClose={() => setQuizOpen(false)} />
     </div>
   );
 }
 
-export default function App() {
-  return <TraffAgentLanding />;
-}
+export default function App() { return <TraffAgentLanding />; }
