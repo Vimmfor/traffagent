@@ -3,14 +3,14 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check, Menu, Sparkles, X } from "lucide-react";
 
 /**
- * Полный App.tsx
- * - Обновлённый Hero: только цветной слоган (без слова TraffAgent), увеличен размер
- * - Насыщенная бегущая строка (выше, крупнее, с разделителями и фоном)
- * - Ровные кнопки в «Услуги» и «Тарифы» (h-full flex-col + mt-auto)
- * - Квиз, якоря, анимации
+ * Полный App.tsx (готов к сборке Vite + TS)
+ * - Новый WOW-Hero: 3D tilt, магнитные кнопки, живой градиент заголовка, расширенный marquee
+ * - Кнопки в «Услуги» и «Тарифы» выровнены по низу карточек
+ * - Квиз без ввода (варианты), переход в Telegram на финале
+ * - Плавные якоря для меню
  */
 
-// ==== опциональные интеграции (пока пустые) ====
+// ===== опциональные интеграции (оставь пустым или заполни позже) =====
 const LEAD_WEBHOOK = "";
 const TG_BOT_TOKEN = "";
 const TG_CHAT_ID = "";
@@ -18,11 +18,11 @@ declare global { interface Window { __TG_TOKEN__?: string; __TG_CHAT__?: string;
 const BOT_TOKEN = (typeof window !== "undefined" && window.__TG_TOKEN__) || TG_BOT_TOKEN;
 const CHAT_ID   = (typeof window !== "undefined" && window.__TG_CHAT__)  || TG_CHAT_ID;
 
-// ==== анимации ====
+// ===== анимации =====
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 
-// ==== утилиты ====
+// ===== утилиты =====
 function Section({ id, children, className = "", bg = "" }: { id?: string; children: React.ReactNode; className?: string; bg?: string }) {
   return <section id={id} className={`${bg} relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 ${className}`}>{children}</section>;
 }
@@ -33,7 +33,7 @@ function H2({ children, className = "" }: { children: React.ReactNode; className
   return <h2 className={`mt-2 text-[22px] sm:text-2xl md:text-4xl font-semibold leading-tight tracking-tight ${className}`}>{children}</h2>;
 }
 
-// ==== бегущая строка (крупнее и насыщеннее) ====
+// ===== бегущая строка (крупная и выразительная) =====
 function ContinuousMarquee({ items, speed = 55, gap = 72 }: { items: string[]; speed?: number; gap?: number }) {
   const stripRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(0);
@@ -90,7 +90,7 @@ function ContinuousMarquee({ items, speed = 55, gap = 72 }: { items: string[]; s
   );
 }
 
-// ==== Header ====
+// ===== Header =====
 function Header({ onQuiz }: { onQuiz: () => void }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -136,7 +136,99 @@ function Header({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-// ==== Hero (без слова TraffAgent, только цветной слоган) ====
+// ===== helpers для нового Hero =====
+function useMouseTilt(strength = 10) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [style, setStyle] = useState<{ transform: string }>({ transform: "rotateX(0deg) rotateY(0deg) translateZ(0)" });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const handle = (e: MouseEvent | TouchEvent) => {
+      const rect = el.getBoundingClientRect();
+      const px = (("touches" in e ? e.touches[0].clientX : (e as MouseEvent).clientX) - rect.left) / rect.width;
+      const py = (("touches" in e ? e.touches[0].clientY : (e as MouseEvent).clientY) - rect.top) / rect.height;
+      const rx = (0.5 - py) * strength;
+      const ry = (px - 0.5) * strength;
+      setStyle({ transform: `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(0)` });
+    };
+    const leave = () => setStyle({ transform: "perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0)" });
+
+    el.addEventListener("mousemove", handle);
+    el.addEventListener("touchmove", handle, { passive: true });
+    el.addEventListener("mouseleave", leave);
+    el.addEventListener("touchend", leave);
+    return () => {
+      el.removeEventListener("mousemove", handle);
+      el.removeEventListener("touchmove", handle as any);
+      el.removeEventListener("mouseleave", leave);
+      el.removeEventListener("touchend", leave);
+    };
+  }, [strength]);
+
+  return { ref, style };
+}
+
+function MagneticButton({
+  children,
+  className = "",
+  onClick,
+  href,
+  target,
+  rel,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+  href?: string;
+  target?: string;
+  rel?: string;
+}) {
+  const ref = useRef<HTMLButtonElement | HTMLAnchorElement | null>(null);
+  const [t, setT] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const enter = () => setT({ x: 0, y: 0 });
+    const move = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      const x = e.clientX - (r.left + r.width / 2);
+      const y = e.clientY - (r.top + r.height / 2);
+      setT({ x: x * 0.15, y: y * 0.15 });
+    };
+    const leave = () => setT({ x: 0, y: 0 });
+
+    el.addEventListener("mouseenter", enter);
+    el.addEventListener("mousemove", move);
+    el.addEventListener("mouseleave", leave);
+    return () => {
+      el.removeEventListener("mouseenter", enter);
+      el.removeEventListener("mousemove", move);
+      el.removeEventListener("mouseleave", leave);
+    };
+  }, []);
+
+  const common = {
+    ref,
+    style: { transform: `translate3d(${t.x}px, ${t.y}px, 0)` },
+    className: `will-change-transform transition-transform duration-150 ${className}`,
+  } as any;
+
+  return href ? (
+    <a {...common} href={href} target={target} rel={rel} onClick={onClick}>
+      {children}
+    </a>
+  ) : (
+    <button {...common} type="button" onClick={onClick}>
+      {children}
+    </button>
+  );
+}
+
+// ===== HERO (WOW-версия) =====
 function Hero({ onQuiz }: { onQuiz: () => void }) {
   const prefersReduced = useReducedMotion();
   const sources = [
@@ -148,37 +240,113 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
     "Twitter / X",
     "LinkedIn Ads",
     "Reddit Ads",
-    "Snapchat Ads"
+    "Snapchat Ads",
   ];
+  const tilt = useMouseTilt(8);
 
   return (
-    <Section id="home" className="pt-14 pb-16 sm:pt-16 sm:pb-20" bg="bg-white text-zinc-900">
+    <Section id="home" className="relative overflow-hidden pt-16 pb-20 sm:pt-20 sm:pb-24" bg="bg-white text-zinc-900">
+      {/* динамичные орбы/свет */}
       {!prefersReduced && (
         <>
-          <div className="pointer-events-none absolute -top-24 -left-16 h-64 w-64 rounded-full bg-gradient-to-tr from-indigo-400/40 via-purple-400/40 to-fuchsia-400/40 blur-3xl" />
-          <div className="pointer-events-none absolute top-20 -right-10 h-56 w-56 rounded-full bg-gradient-to-tr from-sky-400/30 via-emerald-300/30 to-purple-400/30 blur-3xl" />
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full blur-3xl"
+            style={{ background: "radial-gradient(60% 60% at 50% 50%, rgba(99,102,241,.35) 0%, rgba(244,63,94,.15) 45%, rgba(255,255,255,0) 70%)" }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+          />
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute top-10 -right-24 h-[420px] w-[420px] rounded-full blur-3xl"
+            style={{ background: "radial-gradient(60% 60% at 50% 50%, rgba(168,85,247,.30) 0%, rgba(34,197,94,.12) 50%, rgba(255,255,255,0) 70%)" }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: "easeOut", delay: 0.1 }}
+          />
         </>
       )}
+
+      {/* анимация градиентного текста */}
+      <style>{`
+        .hero-gradient-text{
+          background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899, #22c55e, #06b6d4);
+          background-size: 200% 200%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: heroGradient 7s ease-in-out infinite;
+        }
+        @keyframes heroGradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
+
       <motion.div variants={container} initial="hidden" animate="show" className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center">
         <motion.div variants={item} className="lg:col-span-7">
           <Kicker>Performance-маркетинг под KPI</Kicker>
-          <h1 className="mt-2 text-[40px] sm:text-6xl md:text-7xl font-extrabold leading-tight tracking-tight">
-            <span className="gradient-text">Performance трафик под KPI</span>
+          <h1 className="mt-3 text-[44px] leading-[1.06] sm:text-7xl sm:leading-[1.06] md:text-[88px] md:leading-[1.04] font-extrabold tracking-tight">
+            <span className="hero-gradient-text">performance маркетинг под KPI</span>
           </h1>
-          <p className="mt-4 max-w-2xl text-zinc-600 text-base sm:text-lg">
+          <p className="mt-5 max-w-2xl text-zinc-600 text-base sm:text-lg">
             Запускаем и масштабируем платный трафик под окупаемость и LTV. Креативы, закупка, аналитика и автоматизация.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
-            <button type="button" onClick={onQuiz} className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-5 py-3 text-base sm:text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-shadow w-full sm:w-auto">
-              Запустить траф
-            </button>
-            <a href="https://t.me/traffagent" target="_blank" rel="noreferrer noopener" className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-300 px-5 py-3 text-base sm:text-sm font-semibold w-full sm:w-auto hover:bg-zinc-100 transition-colors">
+            <MagneticButton
+              onClick={onQuiz}
+              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 px-6 py-4 text-base sm:text-sm font-semibold text-white shadow-xl hover:shadow-2xl"
+            >
+              Запустить траф <ArrowRight className="ml-2 h-5 w-5" />
+            </MagneticButton>
+            <MagneticButton
+              href="https://t.me/traffagent"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex items-center justify-center rounded-2xl border border-zinc-300 bg-white px-6 py-4 text-base sm:text-sm font-semibold hover:bg-zinc-100"
+            >
               Похуй, делаем!
-            </a>
+            </MagneticButton>
           </div>
         </motion.div>
 
-        {/* Бегущая строка - увеличенная полоса */}
+        {/* 3D-карточка с ценностью */}
+        <div className="lg:col-span-5">
+          <motion.div
+            ref={tilt.ref}
+            style={tilt.style}
+            className="relative rounded-3xl border border-zinc-200/70 bg-white/70 backdrop-blur-xl p-5 shadow-[0_30px_60px_-15px_rgba(0,0,0,.15)]"
+          >
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium text-zinc-700">Спринт: 14 дней</div>
+              <span className="text-xs rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700 border border-emerald-200">KPI-driven</span>
+            </div>
+            <ul className="mt-3 space-y-2 text-sm text-zinc-600">
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-500" /> 6–12 креативов / итерация</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-500" /> мультиканальный баинг</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-500" /> автоматизация и правила</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-500" /> сквозная аналитика</li>
+            </ul>
+            <div className="mt-4 grid grid-cols-3 gap-2 text-[11px]">
+              <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center">
+                <div className="text-zinc-900 font-semibold">3.7x</div>
+                <div className="text-zinc-500 mt-0.5">ROAS avg</div>
+              </div>
+              <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center">
+                <div className="text-zinc-900 font-semibold">120k+</div>
+                <div className="text-zinc-500 mt-0.5">лидов/год</div>
+              </div>
+              <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center">
+                <div className="text-zinc-900 font-semibold">18</div>
+                <div className="text-zinc-500 mt-0.5">источников</div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* широкий marquee */}
         <div className="lg:col-span-12">
           <ContinuousMarquee items={sources} speed={55} gap={72} />
         </div>
@@ -187,7 +355,7 @@ function Hero({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-// ==== Metrics ====
+// ===== Metrics =====
 function Metrics() {
   const stats: [string, string][] = [
     ["3.7x","средний ROAS"],
@@ -209,7 +377,7 @@ function Metrics() {
   );
 }
 
-// ==== Services (кнопки выровнены по низу) ====
+// ===== Services =====
 function Services({ onQuiz }: { onQuiz: () => void }) {
   const groups = [
     { title: "Медиабаинг + Комплаенс", desc: "Meta, Google, TikTok, альтернативы. Anti-ban, прогрев, резервы.", bullets: ["Гипотезы и тесты", "Масштабирование", "Кейсы по вайт/грей"] },
@@ -246,7 +414,7 @@ function Services({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-// ==== Inside ====
+// ===== Inside =====
 function Inside() {
   const steps: [string, string][] = [
     ["Discovery","Погружаемся в продукт, аудиторию и цели. KPI и рамки."],
@@ -271,7 +439,7 @@ function Inside() {
   );
 }
 
-// ==== Cases ====
+// ===== Cases =====
 function Cases() {
   const list: [string, string, string][] = [
     ["FinTech SaaS","+212% MRR","Google + LinkedIn + контент"],
@@ -297,7 +465,7 @@ function Cases() {
   );
 }
 
-// ==== Pricing (кнопки выровнены по низу) ====
+// ===== Pricing =====
 function Pricing({ onQuiz }: { onQuiz: () => void }) {
   const plans = [
     { name: "Старт", price: "от $1k", desc: "Для тестов и первых продаж", features: ["Стратегия", "3-5 подходов", "1-2 канала", "Еженед. отчет"], highlight: false },
@@ -332,7 +500,7 @@ function Pricing({ onQuiz }: { onQuiz: () => void }) {
   );
 }
 
-// ==== FAQ ====
+// ===== FAQ =====
 function FAQ() {
   const qa: [string, string][] = [
     ["С какими вертикалями работаете?","E-com, edtech, подписки, mobile, SaaS, финтех."],
@@ -355,7 +523,7 @@ function FAQ() {
   );
 }
 
-// ==== Footer ====
+// ===== Footer =====
 function Footer() {
   return (
     <footer className="border-t border-white/5 py-8 bg-zinc-950 text-zinc-400">
@@ -369,7 +537,7 @@ function Footer() {
   );
 }
 
-// ==== Quiz ====
+// ===== Квиз =====
 function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
   async function sendLead(payload: any) {
     try {
@@ -457,7 +625,7 @@ function QuizModal({ open, onClose }: { open: boolean; onClose: () => void; }) {
   );
 }
 
-// ==== Корневой компонент ====
+// ===== Корневой компонент =====
 function TraffAgentLanding() {
   const [quizOpen, setQuizOpen] = useState(false);
   useEffect(() => {
